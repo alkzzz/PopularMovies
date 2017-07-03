@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+    <string name="menu_settings">Settings</string>
+    <string name="movie_poster_desc">Movie Poster</string>
+    <string name="mark_favorite">Mark as Favorite</string>
+    <string name="trailers">Trailers:</string>
+    <string name="trailer1">Trailer 1</string>
+    <string name="trailer2">Trailer 2</string>
+    <string name="runtime">%d min</string>
+    <string name="vote_average">%.1f/10</string>
+
+    <!--Preference-->
+    <string name="sort_by_key" translatable="false">sort_by</string>
+    <string name="sort_by_label">Sort Movies By</string>
+    <string name="popular_label">Most Popular</string>
+    <string name="top_rated_label">Highest Rated</string>
+    <string name="popular_value" translatable="false">popularity.desc</string>
+    <string name="top_rated_value" translatable="false">vote_average.desc</string>
+
+</resources>
