@@ -90,7 +90,7 @@ public class DetailActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<MovieDetail> call, Throwable t) {
-                Toast.makeText(DetailActivity.this, "Connection Failed!!!", Toast.LENGTH_LONG).show();
+                Toast.makeText(DetailActivity.this, "Connection Failed!!! "+t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }

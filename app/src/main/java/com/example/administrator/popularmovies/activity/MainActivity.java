@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
             @Override
             public void onFailure(@NonNull Call<Movie> call, @NonNull Throwable t) {
-                Toast.makeText(MainActivity.this, "Connection Failed!!!", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Connection Failed!!! "+t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
