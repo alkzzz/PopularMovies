@@ -1,12 +1,13 @@
 package com.example.administrator.popularmovies.activity;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,6 +51,14 @@ public class DetailActivity extends AppCompatActivity {
     ImageButton mImageButton1;
     @BindView(R.id.trailer2)
     TextView mTrailer2;
+    @BindView(R.id.divider1)
+    View mDivider1;
+    @BindView(R.id.divider2)
+    View mDivider2;
+    @BindView(R.id.scrollView)
+    ScrollView mScrollView;
+    @BindView(R.id.progressBar)
+    ProgressBar mProgressBar;
 
     private int movie_id;
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w342";
@@ -58,6 +67,8 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         ButterKnife.bind(this);
+        mProgressBar.setVisibility(View.VISIBLE);
+        mScrollView.setVisibility(View.INVISIBLE);
 
         Intent intent = getIntent();
         movie_id = intent.getIntExtra("movie_id", 0);
@@ -68,15 +79,6 @@ public class DetailActivity extends AppCompatActivity {
         String apiKey = getApplicationContext().getString(R.string.api_key);
         final MovieService movieService =
                 MovieClient.getClient().create(MovieService.class);
-
-        final ProgressDialog progressDialog;
-        progressDialog = new ProgressDialog(DetailActivity.this);
-        progressDialog.setMax(100);
-        progressDialog.setMessage("Its loading....");
-        progressDialog.setTitle("Popular Movies");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        // show it
-        progressDialog.show();
 
         Call<MovieDetail> call = movieService.getMovieDetail(movie_id, apiKey);
         call.enqueue(new Callback<MovieDetail>() {
@@ -93,16 +95,16 @@ public class DetailActivity extends AppCompatActivity {
                     mTvRuntime.setText(getString(R.string.runtime, response.body().getRuntime()));
                     mTvVoteAverage.setText(getString(R.string.vote_average, response.body().getVote_average()));
                     mTvSynopsis.setText(response.body().getOverview());
-                    progressDialog.dismiss();
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                    mScrollView.setVisibility(View.VISIBLE);
                 } else {
-                    Toast.makeText(DetailActivity.this, "Movie Not Found", Toast.LENGTH_LONG).show();
-                    progressDialog.dismiss();
+                    Toast.makeText(DetailActivity.this, "Movie Not Found..", Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<MovieDetail> call, Throwable t) {
-                Toast.makeText(DetailActivity.this, "Connection Failed!!! "+t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(DetailActivity.this, "Connection Failed!! " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
