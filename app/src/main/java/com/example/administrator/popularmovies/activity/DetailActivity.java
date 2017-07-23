@@ -1,5 +1,6 @@
 package com.example.administrator.popularmovies.activity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -68,6 +69,15 @@ public class DetailActivity extends AppCompatActivity {
         final MovieService movieService =
                 MovieClient.getClient().create(MovieService.class);
 
+        final ProgressDialog progressDialog;
+        progressDialog = new ProgressDialog(DetailActivity.this);
+        progressDialog.setMax(100);
+        progressDialog.setMessage("Its loading....");
+        progressDialog.setTitle("Popular Movies");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        // show it
+        progressDialog.show();
+
         Call<MovieDetail> call = movieService.getMovieDetail(movie_id, apiKey);
         call.enqueue(new Callback<MovieDetail>() {
 
@@ -83,8 +93,10 @@ public class DetailActivity extends AppCompatActivity {
                     mTvRuntime.setText(getString(R.string.runtime, response.body().getRuntime()));
                     mTvVoteAverage.setText(getString(R.string.vote_average, response.body().getVote_average()));
                     mTvSynopsis.setText(response.body().getOverview());
+                    progressDialog.dismiss();
                 } else {
                     Toast.makeText(DetailActivity.this, "Movie Not Found", Toast.LENGTH_LONG).show();
+                    progressDialog.dismiss();
                 }
             }
 
