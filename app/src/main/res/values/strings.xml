@@ -4,6 +4,7 @@
     <string name="movie_poster_desc">Movie Poster</string>
     <string name="mark_favorite">Mark as Favorite</string>
     <string name="trailers">Trailers:</string>
+    <string name="reviews">Reviews:</string>
     <string name="trailer1">Trailer 1</string>
     <string name="trailer2">Trailer 2</string>
     <string name="runtime">%d min</string>

@@ -13,7 +13,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieHolder> {
+public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.MovieHolder> {
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w185/";
     private final Context mContext;
     private final List<Movie.ResultsBean> mMovieList;
@@ -35,14 +35,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieHolder>
         }
     }
 
-    public MovieAdapter (Context c, List<Movie.ResultsBean> movieList, ItemClickListener itemClickListener) {
+    public MoviePosterAdapter(Context c, List<Movie.ResultsBean> movieList, ItemClickListener itemClickListener) {
         mContext = c;
         mMovieList = movieList;
         mItemClickListener = itemClickListener;
     }
 
     public MovieHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_row, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_poster_row, parent, false);
         return new MovieHolder(view);
     }
 

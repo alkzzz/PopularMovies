@@ -3,8 +3,8 @@ package com.example.administrator.popularmovies.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -39,26 +39,16 @@ public class DetailActivity extends AppCompatActivity {
     TextView mMarkFavorite;
     @BindView(R.id.tv_synopsis)
     TextView mTvSynopsis;
-    @BindView(R.id.divider)
+    @BindView(R.id.synopsisdivider)
     View mDivider;
-    @BindView(R.id.tv_trailers)
-    TextView mTvTrailers;
-    @BindView(R.id.imageButton)
-    ImageButton mImageButton;
-    @BindView(R.id.trailer1)
-    TextView mTrailer1;
-    @BindView(R.id.imageButton1)
-    ImageButton mImageButton1;
-    @BindView(R.id.trailer2)
-    TextView mTrailer2;
-    @BindView(R.id.divider1)
-    View mDivider1;
-    @BindView(R.id.divider2)
-    View mDivider2;
     @BindView(R.id.scrollView)
     ScrollView mScrollView;
     @BindView(R.id.progressBar)
     ProgressBar mProgressBar;
+    @BindView(R.id.rv_movie_trailers)
+    RecyclerView mRvMovieTrailers;
+    @BindView(R.id.rv_movie_reviews)
+    RecyclerView mRvMovieReviews;
 
     private int movie_id;
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w342";
@@ -108,4 +98,5 @@ public class DetailActivity extends AppCompatActivity {
             }
         });
     }
+
 }

@@ -14,7 +14,7 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.example.administrator.popularmovies.R;
-import com.example.administrator.popularmovies.adapter.MovieAdapter;
+import com.example.administrator.popularmovies.adapter.MoviePosterAdapter;
 import com.example.administrator.popularmovies.model.Movie;
 import com.example.administrator.popularmovies.rest.MovieClient;
 import com.example.administrator.popularmovies.rest.MovieService;
@@ -25,7 +25,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, MovieAdapter.ItemClickListener {
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, MoviePosterAdapter.ItemClickListener {
 
     private List<Movie.ResultsBean> mMoviesList;
     private String userPref = "";
@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             @Override
             public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
                 mMoviesList = response.body().getResults();
-                recyclerView.setAdapter(new MovieAdapter(MainActivity.this, mMoviesList, MainActivity.this));
+                recyclerView.setAdapter(new MoviePosterAdapter(MainActivity.this, mMoviesList, MainActivity.this));
             }
 
             @Override
