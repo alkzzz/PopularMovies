@@ -1,21 +1,29 @@
 package com.example.administrator.popularmovies.activity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.administrator.popularmovies.R;
+import com.example.administrator.popularmovies.adapter.MovieReviewsAdapter;
+import com.example.administrator.popularmovies.adapter.MovieTrailersAdapter;
 import com.example.administrator.popularmovies.model.MovieDetail;
+import com.example.administrator.popularmovies.model.MovieReview;
+import com.example.administrator.popularmovies.model.MovieTrailer;
 import com.example.administrator.popularmovies.rest.MovieClient;
 import com.example.administrator.popularmovies.rest.MovieService;
 import com.squareup.picasso.Picasso;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -23,7 +31,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements MovieTrailersAdapter.ItemClickListener {
 
     @BindView(R.id.tv_title)
     TextView mTvTitle;
@@ -41,17 +49,25 @@ public class DetailActivity extends AppCompatActivity {
     TextView mTvSynopsis;
     @BindView(R.id.synopsisdivider)
     View mDivider;
-    @BindView(R.id.scrollView)
-    ScrollView mScrollView;
     @BindView(R.id.progressBar)
     ProgressBar mProgressBar;
     @BindView(R.id.rv_movie_trailers)
     RecyclerView mRvMovieTrailers;
     @BindView(R.id.rv_movie_reviews)
     RecyclerView mRvMovieReviews;
+    @BindView(R.id.scrollView)
+    NestedScrollView mScrollView;
+    @BindView(R.id.tv_trailer_title)
+    TextView mTvTrailerTitle;
+    @BindView(R.id.tv_no_trailer)
+    TextView mTvNoTrailer;
+    @BindView(R.id.tv_no_review)
+    TextView mTvNoReview;
 
     private int movie_id;
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w342";
+    private List<MovieTrailer.ResultsBean> mTrailerList;
+    private List<MovieReview.ResultsBean> mReviewList;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,15 +78,19 @@ public class DetailActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         movie_id = intent.getIntExtra("movie_id", 0);
-        makeRequest();
+        mRvMovieTrailers.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        mRvMovieReviews.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        makeMovieRequest();
+        movieTrailerRequest();
+        movieReviewRequest();
     }
 
-    private void makeRequest() {
+    private void makeMovieRequest() {
         String apiKey = getApplicationContext().getString(R.string.api_key);
         final MovieService movieService =
                 MovieClient.getClient().create(MovieService.class);
 
-        Call<MovieDetail> call = movieService.getMovieDetail(movie_id, apiKey);
+        Call<MovieDetail> call = movieService.getMovieDetails(movie_id, apiKey);
         call.enqueue(new Callback<MovieDetail>() {
 
             @Override
@@ -99,4 +119,62 @@ public class DetailActivity extends AppCompatActivity {
         });
     }
 
+    private void movieTrailerRequest() {
+        String apiKey = getApplicationContext().getString(R.string.api_key);
+        final MovieService movieService = MovieClient.getClient().create(MovieService.class);
+
+        Call<MovieTrailer> call = movieService.getMovieTrailers(movie_id, apiKey);
+        call.enqueue(new Callback<MovieTrailer>() {
+            @Override
+            public void onResponse(Call<MovieTrailer> call, Response<MovieTrailer> response) {
+                mTrailerList = response.body().getResults();
+                if (mTrailerList.size() > 0) {
+                    mRvMovieTrailers.setAdapter(new MovieTrailersAdapter(DetailActivity.this, mTrailerList, DetailActivity.this));
+                } else {
+                    mRvMovieTrailers.setVisibility(View.GONE);
+                    mTvNoTrailer.setVisibility(View.VISIBLE);
+                    mTvNoTrailer.setText("There are no trailers available for this movie.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MovieTrailer> call, Throwable t) {
+                Toast.makeText(DetailActivity.this, "Connection Failed!! " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void movieReviewRequest() {
+        String apiKey = getApplicationContext().getString(R.string.api_key);
+        final MovieService movieService = MovieClient.getClient().create(MovieService.class);
+
+        Call<MovieReview> call = movieService.getMovieReviews(movie_id, apiKey);
+        call.enqueue(new Callback<MovieReview>() {
+            @Override
+            public void onResponse(Call<MovieReview> call, Response<MovieReview> response) {
+                mReviewList = response.body().getResults();
+                if (mReviewList.size() > 0) {
+                    mRvMovieReviews.setAdapter(new MovieReviewsAdapter(DetailActivity.this, mReviewList));
+                } else {
+                    mRvMovieReviews.setVisibility(View.GONE);
+                    mTvNoReview.setVisibility(View.VISIBLE);
+                    mTvNoReview.setText("There are no reviews available for this movie.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MovieReview> call, Throwable t) {
+                Toast.makeText(DetailActivity.this, "Connection Failed!! " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        MovieTrailer.ResultsBean trailer = mTrailerList.get(position);
+        String videoKey = trailer.getKey();
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse("https://youtube.com/watch?v=" + videoKey));
+        startActivity(intent);
+    }
 }
