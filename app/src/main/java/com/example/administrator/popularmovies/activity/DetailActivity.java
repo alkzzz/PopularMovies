@@ -156,6 +156,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         String apiKey = getApplicationContext().getString(R.string.api_key);
         final MovieService movieService = MovieClient.getClient().create(MovieService.class);
 
+
         Call<MovieReview> call = movieService.getMovieReviews(movie_id, apiKey);
         call.enqueue(new Callback<MovieReview>() {
             @Override
