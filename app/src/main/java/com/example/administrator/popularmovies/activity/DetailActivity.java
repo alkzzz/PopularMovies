@@ -3,6 +3,8 @@ package com.example.administrator.popularmovies.activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -57,8 +59,6 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     RecyclerView mRvMovieReviews;
     @BindView(R.id.scrollView)
     NestedScrollView mScrollView;
-    @BindView(R.id.tv_trailer_title)
-    TextView mTvTrailerTitle;
     @BindView(R.id.tv_no_trailer)
     TextView mTvNoTrailer;
     @BindView(R.id.tv_no_review)
@@ -109,6 +109,12 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                     mScrollView.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(DetailActivity.this, "Movie Not Found..", Toast.LENGTH_LONG).show();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish();
+                        }
+                    }, 1000);
                 }
             }
 
@@ -127,13 +133,15 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         call.enqueue(new Callback<MovieTrailer>() {
             @Override
             public void onResponse(Call<MovieTrailer> call, Response<MovieTrailer> response) {
-                mTrailerList = response.body().getResults();
-                if (mTrailerList.size() > 0) {
-                    mRvMovieTrailers.setAdapter(new MovieTrailersAdapter(DetailActivity.this, mTrailerList, DetailActivity.this));
-                } else {
-                    mRvMovieTrailers.setVisibility(View.GONE);
-                    mTvNoTrailer.setVisibility(View.VISIBLE);
-                    mTvNoTrailer.setText("There are no trailers available for this movie.");
+                if (response.isSuccessful()) {
+                    mTrailerList = response.body().getResults();
+                    if (mTrailerList.size() > 0) {
+                        mRvMovieTrailers.setAdapter(new MovieTrailersAdapter(DetailActivity.this, mTrailerList, DetailActivity.this));
+                    } else {
+                        mRvMovieTrailers.setVisibility(View.GONE);
+                        mTvNoTrailer.setVisibility(View.VISIBLE);
+                        mTvNoTrailer.setText("No trailer found for this movie.");
+                    }
                 }
             }
 
@@ -152,13 +160,15 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         call.enqueue(new Callback<MovieReview>() {
             @Override
             public void onResponse(Call<MovieReview> call, Response<MovieReview> response) {
-                mReviewList = response.body().getResults();
-                if (mReviewList.size() > 0) {
-                    mRvMovieReviews.setAdapter(new MovieReviewsAdapter(DetailActivity.this, mReviewList));
-                } else {
-                    mRvMovieReviews.setVisibility(View.GONE);
-                    mTvNoReview.setVisibility(View.VISIBLE);
-                    mTvNoReview.setText("There are no reviews available for this movie.");
+                if (response.isSuccessful()) {
+                    mReviewList = response.body().getResults();
+                    if (mReviewList.size() > 0) {
+                        mRvMovieReviews.setAdapter(new MovieReviewsAdapter(DetailActivity.this, mReviewList));
+                    } else {
+                        mRvMovieReviews.setVisibility(View.GONE);
+                        mTvNoReview.setVisibility(View.VISIBLE);
+                        mTvNoReview.setText("No review found for this movie.");
+                    }
                 }
             }
 

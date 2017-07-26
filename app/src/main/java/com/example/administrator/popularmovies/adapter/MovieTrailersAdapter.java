@@ -33,9 +33,11 @@ public class MovieTrailersAdapter extends RecyclerView.Adapter<MovieTrailersAdap
 
     @Override
     public void onBindViewHolder(TrailerHolder holder, int position) {
-        MovieTrailer.ResultsBean trailer = mtrailerList.get(position);
-        holder.mTv_trailerCount.setText("Trailer "+(position+1));
-        holder.mTv_trailerName.setText(trailer.getName());
+        if (mtrailerList.size() > 0) {
+            MovieTrailer.ResultsBean trailer = mtrailerList.get(position);
+            holder.mTv_trailerCount.setText("Trailer " + (position + 1));
+            holder.mTv_trailerName.setText(trailer.getName());
+        }
     }
 
     @Override
