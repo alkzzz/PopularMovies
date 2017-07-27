@@ -1,13 +1,17 @@
 package com.example.administrator.popularmovies.activity;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -15,6 +19,8 @@ import android.widget.Toast;
 
 import com.example.administrator.popularmovies.R;
 import com.example.administrator.popularmovies.adapter.MoviePosterAdapter;
+import com.example.administrator.popularmovies.data.MovieContract;
+import com.example.administrator.popularmovies.data.MovieDbHelper;
 import com.example.administrator.popularmovies.model.Movie;
 import com.example.administrator.popularmovies.rest.MovieClient;
 import com.example.administrator.popularmovies.rest.MovieService;
@@ -30,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private List<Movie.ResultsBean> mMoviesList;
     private String userPref = "";
     private RecyclerView recyclerView;
+    private MoviePosterAdapter moviePosterAdapter;
+    private SQLiteDatabase mDb;
 
     @Override
     protected void onDestroy() {
@@ -43,9 +51,20 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        MovieDbHelper movieDbHelper = new MovieDbHelper(this);
+        mDb = movieDbHelper.getWritableDatabase();
+
         recyclerView = (RecyclerView) findViewById(R.id.rv_movie_poster);
         recyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
-        makeRequest();
+
+        Cursor cursor = getMoviesFromDb();
+        //makeRequest();
+        if (cursor.moveToFirst()) {
+            moviePosterAdapter = new MoviePosterAdapter(MainActivity.this, cursor, MainActivity.this);
+        } else {
+            makeRequest();
+        }
+
     }
 
     private void makeRequest() {
@@ -60,8 +79,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
             @Override
             public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
-                mMoviesList = response.body().getResults();
-                recyclerView.setAdapter(new MoviePosterAdapter(MainActivity.this, mMoviesList, MainActivity.this));
+                if(response.isSuccessful()) {
+                    mMoviesList = response.body().getResults();
+                    moviePosterAdapter = new MoviePosterAdapter(MainActivity.this, mMoviesList, MainActivity.this);
+                    recyclerView.setAdapter(moviePosterAdapter);
+                    bulkInsertMovies(mMoviesList);
+                }
             }
 
             @Override
@@ -70,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             }
         });
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+
     }
 
     @Override
@@ -106,4 +130,31 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         intent.putExtra("movie_id", id);
         startActivity(intent);
     }
+
+    private long bulkInsertMovies(List<Movie.ResultsBean> movieList) {
+        ContentValues contentValues = new ContentValues();
+        for (Movie.ResultsBean movie : movieList) {
+            contentValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getId());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_NAME, movie.getId());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_POSTER, movie.getId());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
+        }
+        return mDb.insert(MovieContract.MovieEntry.TABLE_NAME, null, contentValues);
+    }
+
+    private Cursor getMoviesFromDb() {
+        Cursor mCursor;
+        mCursor = mDb.query(
+                MovieContract.MovieEntry.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        return mCursor;
+    }
+
 }

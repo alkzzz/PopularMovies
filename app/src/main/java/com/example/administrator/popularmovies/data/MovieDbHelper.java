@@ -3,6 +3,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import com.example.administrator.popularmovies.data.MovieContract.MovieEntry;
+import com.example.administrator.popularmovies.model.Movie;
 
 public class MovieDbHelper extends SQLiteOpenHelper {
 
@@ -18,10 +19,12 @@ public class MovieDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         final String SQL_CREATE_MOVIE_TABLE =
                 "CREATE TABLE "+ MovieEntry.TABLE_NAME+ " (" +
-                        MovieEntry.COLUMN_ID + " INTEGER PRIMARY KEY ," +
-                        MovieEntry.COLUMN_NAME + " VARCHAR NOT NULL ," +
-                        MovieEntry.COLUMN_POSTER + " VARCHAR NOT NULL " +
-                        ");";
+                        MovieEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        MovieEntry.COLUMN_MOVIE_ID + " INTEGER NOT NULL," +
+                        MovieEntry.COLUMN_NAME + " VARCHAR NOT NULL," +
+                        MovieEntry.COLUMN_POSTER + " VARCHAR NOT NULL," +
+                        MovieEntry.COLUMN_IS_FAVORITE + " INTEGER DEFAULT 0," +
+                        " UNIQUE (" + MovieEntry.COLUMN_MOVIE_ID + ") ON CONFLICT REPLACE);";
 
         db.execSQL(SQL_CREATE_MOVIE_TABLE);
     }

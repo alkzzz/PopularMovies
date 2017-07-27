@@ -1,6 +1,7 @@
 package com.example.administrator.popularmovies.adapter;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,16 +14,17 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.MovieHolder> {
+public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.PosterHolder> {
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w185/";
     private final Context mContext;
-    private final List<Movie.ResultsBean> mMovieList;
+    private List<Movie.ResultsBean> mMovieList;
+    private Cursor mCursor;
     private final ItemClickListener mItemClickListener;
 
-    class MovieHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    class PosterHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final ImageView poster;
 
-        MovieHolder(View itemView) {
+        PosterHolder(View itemView) {
             super(itemView);
             poster = (ImageView) itemView.findViewById(R.id.iv_poster);
             itemView.setOnClickListener(this);
@@ -41,13 +43,19 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
         mItemClickListener = itemClickListener;
     }
 
-    public MovieHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public MoviePosterAdapter(Context c, Cursor cursor, ItemClickListener itemClickListener) {
+        mContext = c;
+        mCursor = cursor;
+        mItemClickListener = itemClickListener;
+    }
+
+    public PosterHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_poster_row, parent, false);
-        return new MovieHolder(view);
+        return new PosterHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(MovieHolder holder, int position) {
+    public void onBindViewHolder(PosterHolder holder, int position) {
         Movie.ResultsBean movie = mMovieList.get(position);
         Picasso.with(mContext)
                 .load(POSTER_URL+movie.getPoster_path())
