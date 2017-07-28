@@ -30,6 +30,10 @@
             android:name=".activity.DetailActivity"
             android:parentActivityName=".activity.MainActivity"
             tools:targetApi="jelly_bean" />
+        <provider
+            android:authorities="com.example.administrator.popularmovies"
+            android:name="com.example.administrator.popularmovies.data.MovieProvider"
+            android:exported="false" />
     </application>
 
 </manifest>

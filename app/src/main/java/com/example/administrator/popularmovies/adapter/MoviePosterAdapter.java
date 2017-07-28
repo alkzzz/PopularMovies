@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.example.administrator.popularmovies.R;
+import com.example.administrator.popularmovies.data.MovieContract;
 import com.example.administrator.popularmovies.model.Movie;
 import com.squareup.picasso.Picasso;
 
@@ -20,6 +21,11 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     private List<Movie.ResultsBean> mMovieList;
     private Cursor mCursor;
     private final ItemClickListener mItemClickListener;
+
+    public static final int INDEX_MOVIE_ID = 1;
+    public static final int INDEX_MOVIE_NAME = 2;
+    public static final int INDEX_MOVIE_POSTER = 3;
+    public static final int INDEX_MOVIE_IS_FAVORITE = 4;
 
     class PosterHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         final ImageView poster;
@@ -56,20 +62,39 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
 
     @Override
     public void onBindViewHolder(PosterHolder holder, int position) {
-        Movie.ResultsBean movie = mMovieList.get(position);
-        Picasso.with(mContext)
-                .load(POSTER_URL+movie.getPoster_path())
-                .error(R.drawable.no_image)
-                .into(holder.poster);
+        if (mCursor != null && mCursor.moveToFirst()) {
+            mCursor.moveToPosition(position);
+            Picasso.with(mContext)
+                    .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
+                    .error(R.drawable.no_image)
+                    .into(holder.poster);
+        } else {
+            Movie.ResultsBean movie = mMovieList.get(position);
+            Picasso.with(mContext)
+                    .load(POSTER_URL + movie.getPoster_path())
+                    .error(R.drawable.no_image)
+                    .into(holder.poster);
+        }
     }
 
 
     @Override
     public int getItemCount() {
-        return mMovieList.size();
+        if (mCursor != null && mCursor.moveToFirst()) {
+            return mCursor.getCount();
+        } else {
+            return mMovieList.size();
+        }
+
     }
 
     public interface ItemClickListener {
         void onItemClick(int position);
     }
+
+    public void swapCursor(Cursor newCursor) {
+        mCursor = newCursor;
+        notifyDataSetChanged();
+    }
+
 }
