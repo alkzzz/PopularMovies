@@ -43,12 +43,6 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
         }
     }
 
-    public MoviePosterAdapter(Context c, List<Movie.ResultsBean> movieList, ItemClickListener itemClickListener) {
-        mContext = c;
-        mMovieList = movieList;
-        mItemClickListener = itemClickListener;
-    }
-
     public MoviePosterAdapter(Context c, Cursor cursor, ItemClickListener itemClickListener) {
         mContext = c;
         mCursor = cursor;
@@ -62,30 +56,16 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
 
     @Override
     public void onBindViewHolder(PosterHolder holder, int position) {
-        if (mCursor != null && mCursor.moveToFirst()) {
-            mCursor.moveToPosition(position);
-            Picasso.with(mContext)
-                    .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
-                    .error(R.drawable.no_image)
-                    .into(holder.poster);
-        } else {
-            Movie.ResultsBean movie = mMovieList.get(position);
-            Picasso.with(mContext)
-                    .load(POSTER_URL + movie.getPoster_path())
-                    .error(R.drawable.no_image)
-                    .into(holder.poster);
-        }
+        mCursor.moveToPosition(position);
+        Picasso.with(mContext)
+                .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
+                .error(R.drawable.no_image)
+                .into(holder.poster);
     }
-
 
     @Override
     public int getItemCount() {
-        if (mCursor != null && mCursor.moveToFirst()) {
-            return mCursor.getCount();
-        } else {
-            return mMovieList.size();
-        }
-
+        return mCursor.getCount();
     }
 
     public interface ItemClickListener {

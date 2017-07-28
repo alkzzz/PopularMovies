@@ -23,6 +23,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                         MovieEntry.COLUMN_MOVIE_ID + " INTEGER NOT NULL," +
                         MovieEntry.COLUMN_NAME + " VARCHAR NOT NULL," +
                         MovieEntry.COLUMN_POSTER + " VARCHAR NOT NULL," +
+                        MovieEntry.COLUMN_CATEGORY + " VARCHAR NOT NULL," +
                         MovieEntry.COLUMN_IS_FAVORITE + " INTEGER DEFAULT 0," +
                         " UNIQUE (" + MovieEntry.COLUMN_MOVIE_ID + ") ON CONFLICT REPLACE);";
 

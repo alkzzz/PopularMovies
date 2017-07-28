@@ -15,17 +15,16 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.example.administrator.popularmovies.R;
 import com.example.administrator.popularmovies.adapter.MoviePosterAdapter;
 import com.example.administrator.popularmovies.data.MovieContract;
-import com.example.administrator.popularmovies.data.MovieDbHelper;
 import com.example.administrator.popularmovies.model.Movie;
 import com.example.administrator.popularmovies.rest.MovieClient;
 import com.example.administrator.popularmovies.rest.MovieService;
 
 import java.util.List;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -59,14 +58,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         recyclerView = (RecyclerView) findViewById(R.id.rv_movie_poster);
         recyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
 
-        mCursor = getMoviesFromDb();
-        if (mCursor != null && mCursor.moveToFirst()) {
-            moviePosterAdapter = new MoviePosterAdapter(MainActivity.this, mCursor, MainActivity.this);
-            recyclerView.setAdapter(moviePosterAdapter);
-        } else {
-            makeRequest();
-        }
-
+        makeRequest();
     }
 
     @Override
@@ -77,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void makeRequest() {
+        final String prefKey;
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String apiKey = getApplicationContext().getString(R.string.api_key);
         userPref = sharedPreferences.getString(getString(R.string.sort_by_key), getString(R.string.popular_value));
@@ -84,21 +77,31 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                 MovieClient.getClient().create(MovieService.class);
 
         Call<Movie> call = apiService.getMoviesList(apiKey, userPref);
+        switch (userPref) {
+            case "popularity.desc":
+                prefKey = "popular";
+                break;
+            case "vote_average.desc":
+                prefKey = "highest_rated";
+                break;
+            default:
+                prefKey = "favorite";
+                break;
+        }
         call.enqueue(new Callback<Movie>() {
 
             @Override
             public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
                 if(response.isSuccessful()) {
                     mMoviesList = response.body().getResults();
-                    moviePosterAdapter = new MoviePosterAdapter(MainActivity.this, mMoviesList, MainActivity.this);
-                    recyclerView.setAdapter(moviePosterAdapter);
-                    bulkInsertMovies(mMoviesList);
+                    bulkInsertMovies(mMoviesList, prefKey);
+                    getMoviesFromDb(prefKey);
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<Movie> call, @NonNull Throwable t) {
-                Toast.makeText(MainActivity.this, "Connection Failed!!! "+t.getMessage(), Toast.LENGTH_LONG).show();
+                getMoviesFromDb(prefKey);
             }
         });
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
@@ -147,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         startActivity(intent);
     }
 
-    private long bulkInsertMovies(List<Movie.ResultsBean> movieList) {
+    private long bulkInsertMovies(List<Movie.ResultsBean> movieList, String category) {
         ContentResolver contentResolver = getContentResolver();
         ContentValues[] contentValues = new ContentValues[movieList.size()];
         int i = 0;
@@ -156,6 +159,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             value.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getId());
             value.put(MovieContract.MovieEntry.COLUMN_NAME, movie.getTitle());
             value.put(MovieContract.MovieEntry.COLUMN_POSTER, movie.getPoster_path());
+            value.put(MovieContract.MovieEntry.COLUMN_CATEGORY, category);
             value.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
             contentValues[i] = value;
             i++;
@@ -163,15 +167,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         return contentResolver.bulkInsert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
     }
 
-    private Cursor getMoviesFromDb() {
+    private void getMoviesFromDb(String userPref) {
         ContentResolver contentResolver = getContentResolver();
-        mCursor = contentResolver.query(MovieContract.MovieEntry.CONTENT_URI,
+        mCursor = contentResolver.query(
+                MovieContract.MovieEntry.CONTENT_URI,
                 null,
-                null,
-                null,
+                MovieContract.MovieEntry.COLUMN_CATEGORY + " = ?",
+                new String[]{userPref},
                 null
-                );
-        return mCursor;
+        );
+        moviePosterAdapter = new MoviePosterAdapter(MainActivity.this, mCursor, MainActivity.this);
+        recyclerView.setAdapter(moviePosterAdapter);
     }
 
 }

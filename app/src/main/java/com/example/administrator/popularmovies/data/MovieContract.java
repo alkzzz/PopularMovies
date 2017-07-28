@@ -23,6 +23,8 @@ public class MovieContract {
 
         public static final String COLUMN_POSTER = "poster";
 
+        public static final String COLUMN_CATEGORY = "category";
+
         public static final String COLUMN_IS_FAVORITE = "is_favorite";
     }
 
