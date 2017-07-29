@@ -2,7 +2,12 @@ package com.example.administrator.popularmovies.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,7 +17,11 @@ import com.example.administrator.popularmovies.R;
 import com.example.administrator.popularmovies.data.MovieContract;
 import com.example.administrator.popularmovies.model.Movie;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.PosterHolder> {
@@ -55,12 +64,46 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     }
 
     @Override
-    public void onBindViewHolder(PosterHolder holder, int position) {
+    public void onBindViewHolder(final PosterHolder holder, int position) {
         mCursor.moveToPosition(position);
         Picasso.with(mContext)
                 .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
-                .error(R.drawable.no_image)
-                .into(holder.poster);
+                .into(new Target() {
+                          @Override
+                          public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
+                              try {
+                                  new Thread(new Runnable() {
+                                      @Override
+                                      public void run() {
+                                          String filename = mCursor.getString(INDEX_MOVIE_POSTER);
+                                          File poster = new File(mContext.getFilesDir(), filename);
+                                          try {
+                                              poster.createNewFile();
+                                              FileOutputStream ostream = new FileOutputStream(poster);
+                                              bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
+                                              ostream.flush();
+                                              ostream.close();
+                                          } catch (IOException e) {
+                                              Log.e("IOException", e.getLocalizedMessage());
+                                          }
+                                      }
+                                  }).start();
+                              } catch(Exception e){
+                                  e.printStackTrace();
+                              }
+                              holder.poster.setImageBitmap(bitmap);
+                          }
+
+                          @Override
+                          public void onBitmapFailed(Drawable errorDrawable) {
+                              holder.poster.setImageResource(R.drawable.no_image);
+                          }
+
+                          @Override
+                          public void onPrepareLoad(Drawable placeHolderDrawable) {
+                          }
+                      }
+                );
     }
 
     @Override
@@ -75,6 +118,43 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     public void swapCursor(Cursor newCursor) {
         mCursor = newCursor;
         notifyDataSetChanged();
+    }
+
+    private static Target getTarget(final String path){
+        return new Target(){
+
+            @Override
+            public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
+                new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        File file = new File(Environment.getExternalStorageDirectory().getPath() + path);
+                        try {
+                            file.createNewFile();
+                            FileOutputStream ostream = new FileOutputStream(file);
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
+                            ostream.flush();
+                            ostream.close();
+                            Log.d("coba", String.valueOf(file));
+                        } catch (IOException e) {
+                            Log.e("IOException", e.getLocalizedMessage());
+                        }
+                    }
+                }).start();
+
+            }
+
+            @Override
+            public void onBitmapFailed(Drawable errorDrawable) {
+
+            }
+
+            @Override
+            public void onPrepareLoad(Drawable placeHolderDrawable) {
+
+            }
+        };
     }
 
 }
