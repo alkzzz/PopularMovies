@@ -27,7 +27,6 @@ import java.util.List;
 public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.PosterHolder> {
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w185/";
     private final Context mContext;
-    private List<Movie.ResultsBean> mMovieList;
     private Cursor mCursor;
     private final ItemClickListener mItemClickListener;
 
@@ -69,44 +68,6 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
                 .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
                 .error(R.drawable.no_image)
                 .into(holder.poster);
-//        Picasso.with(mContext)
-//                .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
-//                .into(new Target() {
-//                          @Override
-//                          public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
-//                              try {
-//                                  new Thread(new Runnable() {
-//                                      @Override
-//                                      public void run() {
-//                                          String filename = mCursor.getString(INDEX_MOVIE_POSTER);
-//                                          File poster = new File(mContext.getFilesDir(), filename);
-//                                          try {
-//                                              poster.createNewFile();
-//                                              FileOutputStream ostream = new FileOutputStream(poster);
-//                                              bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
-//                                              ostream.flush();
-//                                              ostream.close();
-//                                          } catch (IOException e) {
-//                                              Log.e("IOException", e.getLocalizedMessage());
-//                                          }
-//                                      }
-//                                  }).start();
-//                              } catch(Exception e){
-//                                  e.printStackTrace();
-//                              }
-//                              holder.poster.setImageBitmap(bitmap);
-//                          }
-//
-//                          @Override
-//                          public void onBitmapFailed(Drawable errorDrawable) {
-//                              holder.poster.setImageResource(R.drawable.no_image);
-//                          }
-//
-//                          @Override
-//                          public void onPrepareLoad(Drawable placeHolderDrawable) {
-//                          }
-//                      }
-//                );
     }
 
     @Override

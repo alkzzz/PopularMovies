@@ -4,7 +4,10 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
     <color name="colorBackground">#43A047</color>
-    <color name="coloBackgroundDark">#00701a</color>
-    <color name="coloBackgroundLight">#76d275</color>
+    <color name="colorBackgroundDark">#00701a</color>
+    <color name="colorBackgroundLight">#76d275</color>
     <color name="colorText">#F1F8E9</color>
+    <color name="colorRed">#FF0000</color>
+    <color name="colorGreen">#00FF00</color>
+    <color name="colorBlack">#000000</color>
 </resources>

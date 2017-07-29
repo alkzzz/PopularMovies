@@ -1,14 +1,21 @@
 package com.example.administrator.popularmovies.activity;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -18,6 +25,8 @@ import android.widget.Toast;
 import com.example.administrator.popularmovies.R;
 import com.example.administrator.popularmovies.adapter.MovieReviewsAdapter;
 import com.example.administrator.popularmovies.adapter.MovieTrailersAdapter;
+import com.example.administrator.popularmovies.data.MovieContract;
+import com.example.administrator.popularmovies.model.Movie;
 import com.example.administrator.popularmovies.model.MovieDetail;
 import com.example.administrator.popularmovies.model.MovieReview;
 import com.example.administrator.popularmovies.model.MovieTrailer;
@@ -29,6 +38,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -49,9 +59,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     TextView mMarkFavorite;
     @BindView(R.id.tv_synopsis)
     TextView mTvSynopsis;
-    @BindView(R.id.synopsisdivider)
-    View mDivider;
-    @BindView(R.id.progressBar)
+    @BindView(R.id.pb_movieDetail)
     ProgressBar mProgressBar;
     @BindView(R.id.rv_movie_trailers)
     RecyclerView mRvMovieTrailers;
@@ -68,24 +76,94 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w342";
     private List<MovieTrailer.ResultsBean> mTrailerList;
     private List<MovieReview.ResultsBean> mReviewList;
+    private Cursor mCursor;
+
+    private static final int INDEX_MOVIE_ID = 1;
+    private static final int INDEX_MOVIE_NAME = 2;
+    private static final int INDEX_MOVIE_POSTER = 3;
+    private static final int INDEX_MOVIE_CATEGORY = 4;
+    private static final int INDEX_MOVIE_SYNOPSIS = 5;
+    private static final int INDEX_MOVIE_USER_RATING = 6;
+    private static final int INDEX_MOVIE_RELEASE_DATE = 7;
+    private static final int INDEX_MOVIE_IS_FAVORITE = 8;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         ButterKnife.bind(this);
-        mProgressBar.setVisibility(View.VISIBLE);
-        mScrollView.setVisibility(View.INVISIBLE);
+
+        showLoading();
 
         Intent intent = getIntent();
         movie_id = intent.getIntExtra("movie_id", 0);
         mRvMovieTrailers.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         mRvMovieReviews.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        makeMovieRequest();
-        movieTrailerRequest();
-        movieReviewRequest();
+
+        if (haveInternetConnection()) {
+            makeMovieDetailRequest();
+            movieTrailerRequest();
+            movieReviewRequest();
+        } else {
+            fetchMovieDetailsFromDb(movie_id);
+        }
+        showMovie();
     }
 
-    private void makeMovieRequest() {
+    public boolean haveInternetConnection() {
+        ConnectivityManager cm =
+                (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+    }
+
+    private void showLoading()
+    {
+        mProgressBar.setVisibility(View.VISIBLE);
+        mScrollView.setVisibility(View.INVISIBLE);
+    }
+
+    private void showMovie()
+    {
+        mProgressBar.setVisibility(View.INVISIBLE);
+        mScrollView.setVisibility(View.VISIBLE);
+    }
+
+    private void fetchMovieDetailsFromDb(int movie_id) {
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
+        ContentResolver contentResolver = getContentResolver();
+        String movieID = String.valueOf(movie_id);
+        mCursor = contentResolver.query(
+                uri,
+                null,
+                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                new String[]{movieID},
+                null
+        );
+        if (mCursor.moveToFirst()) {
+            mIvPosterDetail.setImageResource(R.drawable.no_image);
+            mTvTitle.setText(mCursor.getString(INDEX_MOVIE_NAME));
+            mTvDate.setText(mCursor.getString(INDEX_MOVIE_RELEASE_DATE).substring(0, 4));
+            mTvRuntime.setText("-");
+            mTvVoteAverage.setText(String.valueOf(mCursor.getFloat(INDEX_MOVIE_USER_RATING)));
+            mTvSynopsis.setText(mCursor.getString(INDEX_MOVIE_SYNOPSIS));
+            mRvMovieTrailers.setVisibility(View.GONE);
+            mTvNoTrailer.setVisibility(View.VISIBLE);
+            mTvNoTrailer.setText("No internet connection to get trailers.");
+            mRvMovieReviews.setVisibility(View.GONE);
+            mTvNoReview.setVisibility(View.VISIBLE);
+            mTvNoReview.setText("No internet connection to get reviews.");
+            if (mCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
+                mMarkFavorite.setText("Favorit");
+                mMarkFavorite.setBackgroundColor(Color.RED);
+                mMarkFavorite.setTextColor(Color.WHITE);
+            }
+        }
+    }
+
+    private void makeMovieDetailRequest() {
         String apiKey = getApplicationContext().getString(R.string.api_key);
         final MovieService movieService =
                 MovieClient.getClient().create(MovieService.class);
@@ -105,8 +183,6 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                     mTvRuntime.setText(getString(R.string.runtime, response.body().getRuntime()));
                     mTvVoteAverage.setText(getString(R.string.vote_average, response.body().getVote_average()));
                     mTvSynopsis.setText(response.body().getOverview());
-                    mProgressBar.setVisibility(View.INVISIBLE);
-                    mScrollView.setVisibility(View.VISIBLE);
                 } else {
                     Toast.makeText(DetailActivity.this, "Movie Not Found..", Toast.LENGTH_LONG).show();
                     new Handler().postDelayed(new Runnable() {
@@ -147,7 +223,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
 
             @Override
             public void onFailure(Call<MovieTrailer> call, Throwable t) {
-                Toast.makeText(DetailActivity.this, "Connection Failed!! " + t.getMessage(), Toast.LENGTH_LONG).show();
+                mTvNoTrailer.setText("No internet connection to get trailers.");
             }
         });
     }
@@ -175,7 +251,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
 
             @Override
             public void onFailure(Call<MovieReview> call, Throwable t) {
-                Toast.makeText(DetailActivity.this, "Connection Failed!! " + t.getMessage(), Toast.LENGTH_LONG).show();
+                mTvNoReview.setText("No internet connection to get reviews.");
             }
         });
     }
@@ -187,5 +263,46 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("https://youtube.com/watch?v=" + videoKey));
         startActivity(intent);
+    }
+
+    @OnClick(R.id.mark_favorite)
+    public void markFavorite() {
+        if (mMarkFavorite.getText().equals(getString(R.string.mark_favorite))) {
+            Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+            uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
+            String id = String.valueOf(movie_id);
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 1);
+            getContentResolver().update(
+                    uri,
+                    contentValues,
+                    MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                    new String[]{id}
+            );
+            mMarkFavorite.setText("Favorit");
+            mMarkFavorite.setBackgroundColor(Color.RED);
+            mMarkFavorite.setTextColor(Color.WHITE);
+        } else {
+            Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+            uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
+            String id = String.valueOf(movie_id);
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
+            getContentResolver().update(
+                    uri,
+                    contentValues,
+                    MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                    new String[]{id}
+            );
+            mMarkFavorite.setText(getString(R.string.mark_favorite));
+            mMarkFavorite.setBackgroundColor(Color.GREEN);
+            mMarkFavorite.setTextColor(Color.BLACK);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mCursor.close();
     }
 }
