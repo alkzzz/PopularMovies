@@ -52,9 +52,8 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
         }
     }
 
-    public MoviePosterAdapter(Context c, Cursor cursor, ItemClickListener itemClickListener) {
+    public MoviePosterAdapter(Context c, ItemClickListener itemClickListener) {
         mContext = c;
-        mCursor = cursor;
         mItemClickListener = itemClickListener;
     }
 
@@ -68,46 +67,51 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
         mCursor.moveToPosition(position);
         Picasso.with(mContext)
                 .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
-                .into(new Target() {
-                          @Override
-                          public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
-                              try {
-                                  new Thread(new Runnable() {
-                                      @Override
-                                      public void run() {
-                                          String filename = mCursor.getString(INDEX_MOVIE_POSTER);
-                                          File poster = new File(mContext.getFilesDir(), filename);
-                                          try {
-                                              poster.createNewFile();
-                                              FileOutputStream ostream = new FileOutputStream(poster);
-                                              bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
-                                              ostream.flush();
-                                              ostream.close();
-                                          } catch (IOException e) {
-                                              Log.e("IOException", e.getLocalizedMessage());
-                                          }
-                                      }
-                                  }).start();
-                              } catch(Exception e){
-                                  e.printStackTrace();
-                              }
-                              holder.poster.setImageBitmap(bitmap);
-                          }
-
-                          @Override
-                          public void onBitmapFailed(Drawable errorDrawable) {
-                              holder.poster.setImageResource(R.drawable.no_image);
-                          }
-
-                          @Override
-                          public void onPrepareLoad(Drawable placeHolderDrawable) {
-                          }
-                      }
-                );
+                .error(R.drawable.no_image)
+                .into(holder.poster);
+//        Picasso.with(mContext)
+//                .load(POSTER_URL + mCursor.getString(INDEX_MOVIE_POSTER))
+//                .into(new Target() {
+//                          @Override
+//                          public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
+//                              try {
+//                                  new Thread(new Runnable() {
+//                                      @Override
+//                                      public void run() {
+//                                          String filename = mCursor.getString(INDEX_MOVIE_POSTER);
+//                                          File poster = new File(mContext.getFilesDir(), filename);
+//                                          try {
+//                                              poster.createNewFile();
+//                                              FileOutputStream ostream = new FileOutputStream(poster);
+//                                              bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
+//                                              ostream.flush();
+//                                              ostream.close();
+//                                          } catch (IOException e) {
+//                                              Log.e("IOException", e.getLocalizedMessage());
+//                                          }
+//                                      }
+//                                  }).start();
+//                              } catch(Exception e){
+//                                  e.printStackTrace();
+//                              }
+//                              holder.poster.setImageBitmap(bitmap);
+//                          }
+//
+//                          @Override
+//                          public void onBitmapFailed(Drawable errorDrawable) {
+//                              holder.poster.setImageResource(R.drawable.no_image);
+//                          }
+//
+//                          @Override
+//                          public void onPrepareLoad(Drawable placeHolderDrawable) {
+//                          }
+//                      }
+//                );
     }
 
     @Override
     public int getItemCount() {
+        if (mCursor == null) return 0;
         return mCursor.getCount();
     }
 
@@ -118,43 +122,6 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     public void swapCursor(Cursor newCursor) {
         mCursor = newCursor;
         notifyDataSetChanged();
-    }
-
-    private static Target getTarget(final String path){
-        return new Target(){
-
-            @Override
-            public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from) {
-                new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        File file = new File(Environment.getExternalStorageDirectory().getPath() + path);
-                        try {
-                            file.createNewFile();
-                            FileOutputStream ostream = new FileOutputStream(file);
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
-                            ostream.flush();
-                            ostream.close();
-                            Log.d("coba", String.valueOf(file));
-                        } catch (IOException e) {
-                            Log.e("IOException", e.getLocalizedMessage());
-                        }
-                    }
-                }).start();
-
-            }
-
-            @Override
-            public void onBitmapFailed(Drawable errorDrawable) {
-
-            }
-
-            @Override
-            public void onPrepareLoad(Drawable placeHolderDrawable) {
-
-            }
-        };
     }
 
 }

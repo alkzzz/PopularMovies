@@ -7,6 +7,9 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -31,13 +34,17 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener, MoviePosterAdapter.ItemClickListener {
+public class MainActivity extends AppCompatActivity implements
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        MoviePosterAdapter.ItemClickListener,
+        LoaderManager.LoaderCallbacks<Cursor> {
 
     private List<Movie.ResultsBean> mMoviesList;
     private String userPref = "";
     private RecyclerView recyclerView;
     private ProgressBar mProgressBar;
-    private Cursor mCursor;
+    private MoviePosterAdapter mMoviePosterAdapter;
+    private int mPosition = RecyclerView.NO_POSITION;
 
     public static final String[] MAIN_FORECAST_PROJECTION = {
             MovieContract.MovieEntry.COLUMN_MOVIE_ID,
@@ -51,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     public static final int INDEX_MOVIE_POSTER = 3;
     public static final int INDEX_MOVIE_IS_FAVORITE = 4;
 
+    private static final int ID_MOVIE_LOADER = 9;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,11 +69,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         recyclerView = (RecyclerView) findViewById(R.id.rv_movie_poster);
         recyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
 
-        //showLoading();
+        mMoviePosterAdapter = new MoviePosterAdapter(this, this);
+        recyclerView.setAdapter(mMoviePosterAdapter);
+
+        showLoading();
 
         makeRequest();
 
-        //showPoster();
+        getSupportLoaderManager().initLoader(ID_MOVIE_LOADER, null, this);
     }
 
     @Override
@@ -85,26 +97,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     }
 
     private void makeRequest() {
-        final String prefKey;
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String apiKey = getApplicationContext().getString(R.string.api_key);
-        userPref = sharedPreferences.getString(getString(R.string.sort_by_key), getString(R.string.popular_value));
         MovieService apiService =
                 MovieClient.getClient().create(MovieService.class);
 
         Call<Movie> popularMovies = apiService.getPopularMovies(apiKey, userPref);
         Call<Movie> highestRated = apiService.getHighestRatedMovies(apiKey, userPref);
-        switch (userPref) {
-            case "popularity.desc":
-                prefKey = "popular";
-                break;
-            case "vote_average.desc":
-                prefKey = "highest_rated";
-                break;
-            default:
-                prefKey = "favorite";
-                break;
-        }
 
         popularMovies.enqueue(new Callback<Movie>() {
 
@@ -112,14 +110,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
                 if(response.isSuccessful()) {
                     mMoviesList = response.body().getResults();
-                    bulkInsertMovies(mMoviesList, prefKey);
-                    getMoviesFromDb(prefKey);
+                    bulkInsertMovies(mMoviesList, "popular");
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<Movie> call, @NonNull Throwable t) {
-                getMoviesFromDb(prefKey);
+
             }
         });
 
@@ -128,18 +125,32 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             public void onResponse(Call<Movie> call, Response<Movie> response) {
                 if(response.isSuccessful()) {
                     mMoviesList = response.body().getResults();
-                    bulkInsertMovies(mMoviesList, prefKey);
-                    getMoviesFromDb(prefKey);
+                    bulkInsertMovies(mMoviesList, "top_rated");
                 }
             }
 
             @Override
             public void onFailure(Call<Movie> call, Throwable t) {
-                getMoviesFromDb(prefKey);
+
             }
         });
+    }
 
-        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+    private long bulkInsertMovies(List<Movie.ResultsBean> movieList, String userPref) {
+        ContentResolver contentResolver = getContentResolver();
+        ContentValues[] contentValues = new ContentValues[movieList.size()];
+        int i = 0;
+        for (Movie.ResultsBean movie : movieList) {
+            ContentValues value = new ContentValues();
+            value.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getId());
+            value.put(MovieContract.MovieEntry.COLUMN_NAME, movie.getTitle());
+            value.put(MovieContract.MovieEntry.COLUMN_POSTER, movie.getPoster_path());
+            value.put(MovieContract.MovieEntry.COLUMN_CATEGORY, userPref);
+            value.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
+            contentValues[i] = value;
+            i++;
+        }
+        return contentResolver.bulkInsert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
     }
 
     @Override
@@ -170,35 +181,18 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
     @Override
     public void onItemClick(int position) {
-        Movie.ResultsBean movie;
-        int id;
-        Intent intent = new Intent(this, DetailActivity.class);
-        if (mCursor != null && mCursor.moveToFirst()) {
-            mCursor.moveToPosition(position);
-            id = mCursor.getInt(INDEX_MOVIE_ID);
-        } else {
-            movie = mMoviesList.get(position);
-            id = movie.getId();
-        }
-        intent.putExtra("movie_id", id);
-        startActivity(intent);
-    }
-
-    private long bulkInsertMovies(List<Movie.ResultsBean> movieList, String userPref) {
-        ContentResolver contentResolver = getContentResolver();
-        ContentValues[] contentValues = new ContentValues[movieList.size()];
-        int i = 0;
-        for (Movie.ResultsBean movie : movieList) {
-            ContentValues value = new ContentValues();
-            value.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movie.getId());
-            value.put(MovieContract.MovieEntry.COLUMN_NAME, movie.getTitle());
-            value.put(MovieContract.MovieEntry.COLUMN_POSTER, movie.getPoster_path());
-            value.put(MovieContract.MovieEntry.COLUMN_CATEGORY, userPref);
-            value.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
-            contentValues[i] = value;
-            i++;
-        }
-        return contentResolver.bulkInsert(MovieContract.MovieEntry.CONTENT_URI, contentValues);
+//        Movie.ResultsBean movie;
+//        int id;
+//        Intent intent = new Intent(this, DetailActivity.class);
+//        if (mCursor != null && mCursor.moveToFirst()) {
+//            mCursor.moveToPosition(position);
+//            id = mCursor.getInt(INDEX_MOVIE_ID);
+//        } else {
+//            movie = mMoviesList.get(position);
+//            id = movie.getId();
+//        }
+//        intent.putExtra("movie_id", id);
+//        startActivity(intent);
     }
 
     private void getMoviesFromDb(String userPref) {
@@ -212,16 +206,45 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 //                    null
 //            );
 //        } else {
-            mCursor = contentResolver.query(
-                    MovieContract.MovieEntry.CONTENT_URI,
-                    null,
-                    MovieContract.MovieEntry.COLUMN_CATEGORY + " = ?",
-                    new String[]{userPref},
-                    null
-            );
-//        }
-        MoviePosterAdapter moviePosterAdapter = new MoviePosterAdapter(MainActivity.this, mCursor, MainActivity.this);
-        recyclerView.setAdapter(moviePosterAdapter);
+//            mCursor = contentResolver.query(
+//                    MovieContract.MovieEntry.CONTENT_URI,
+//                    null,
+//                    MovieContract.MovieEntry.COLUMN_CATEGORY + " = ?",
+//                    new String[]{userPref},
+//                    null
+//            );
+////        }
+//        MoviePosterAdapter moviePosterAdapter = new MoviePosterAdapter(MainActivity.this, MainActivity.this);
+//        recyclerView.setAdapter(moviePosterAdapter);
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case ID_MOVIE_LOADER:
+                return new CursorLoader(
+                        this,
+                        MovieContract.MovieEntry.CONTENT_URI,
+                        null,
+                        null,
+                        null,
+                        null
+                );
+            default:
+                throw new RuntimeException("Loader not implemented : "+id);
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mMoviePosterAdapter.swapCursor(data);
+        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+        recyclerView.smoothScrollToPosition(mPosition);
+        if (data.getCount() != 0) showPoster();
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mMoviePosterAdapter.swapCursor(null);
+    }
 }
