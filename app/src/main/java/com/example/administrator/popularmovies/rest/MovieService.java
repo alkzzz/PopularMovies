@@ -12,8 +12,6 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface MovieService {
-//    @GET("discover/movie")
-//    Call<Movie> getMoviesList(@Query("api_key") String apiKey, @Query("sort_by") String sortBy);
     @GET("discover/movie")
     Call<Movie> getPopularMovies(@Query("api_key") String apiKey, @Query("sort_by") String sortBy);
     @GET("discover/movie")

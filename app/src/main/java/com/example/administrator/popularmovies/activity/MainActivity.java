@@ -122,7 +122,9 @@ public class MainActivity extends AppCompatActivity implements
         mCursor.moveToPosition(position);
         int movie_id = mCursor.getInt(INDEX_MOVIE_ID);
         Intent intent = new Intent(this, DetailActivity.class);
-        intent.putExtra("movie_id", movie_id);
+        Bundle bundle = new Bundle();
+        bundle.putInt("movie_id", movie_id);
+        intent.putExtras(bundle);
         startActivity(intent);
     }
 

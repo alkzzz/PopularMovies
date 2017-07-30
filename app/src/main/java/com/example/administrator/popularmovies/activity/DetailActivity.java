@@ -93,7 +93,12 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         showLoading();
 
         Intent intent = getIntent();
-        movie_id = intent.getIntExtra("movie_id", 0);
+        Bundle bundle = intent.getExtras();
+        if (bundle.isEmpty()) {
+            return;
+        } else {
+            movie_id = bundle.getInt("movie_id");
+        }
         mRvMovieTrailers.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         mRvMovieReviews.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         mCursor = fetchMovieDetailsFromDb(movie_id);
@@ -159,13 +164,13 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                 movieReviewRequest();
             } else {
                 mIvPosterDetail.setImageResource(R.drawable.no_image);
-                mTvRuntime.setText("No internet connection to get runtime.");
+                mTvRuntime.setText(getString(R.string.no_connection_runtime));
                 mRvMovieTrailers.setVisibility(View.GONE);
                 mTvNoTrailer.setVisibility(View.VISIBLE);
-                mTvNoTrailer.setText("No internet connection to get trailers.");
+                mTvNoTrailer.setText(getString(R.string.no_connection_trailer));
                 mRvMovieReviews.setVisibility(View.GONE);
                 mTvNoReview.setVisibility(View.VISIBLE);
-                mTvNoReview.setText("No internet connection to get reviews.");
+                mTvNoReview.setText(getString(R.string.no_connection_review));
             }
             if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
                 mMarkFavorite.setText(getString(R.string.mark_favorite));
@@ -173,7 +178,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                 mMarkFavorite.setTextColor(Color.BLACK);
             }
             else if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
-                mMarkFavorite.setText("Favorit");
+                mMarkFavorite.setText(getString(R.string.favorited));
                 mMarkFavorite.setBackgroundColor(Color.RED);
                 mMarkFavorite.setTextColor(Color.WHITE);
             }
@@ -193,6 +198,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                 if (response.isSuccessful()) {
                     mTvRuntime.setText(getString(R.string.runtime, response.body().getRuntime()));
                 } else {
+                    showLoading();
                     Toast.makeText(DetailActivity.this, "Movie Not Found..", Toast.LENGTH_LONG).show();
                     new Handler().postDelayed(new Runnable() {
                         @Override
@@ -205,7 +211,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
 
             @Override
             public void onFailure(Call<MovieDetail> call, Throwable t) {
-                mTvRuntime.setText("No runtime found for this movie.");
+                mTvRuntime.setText(getString(R.string.no_connection_runtime));
             }
         });
     }
@@ -225,14 +231,16 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                     } else {
                         mRvMovieTrailers.setVisibility(View.GONE);
                         mTvNoTrailer.setVisibility(View.VISIBLE);
-                        mTvNoTrailer.setText("No trailer found for this movie.");
+                        mTvNoTrailer.setText(getString(R.string.not_found_trailer));
                     }
                 }
             }
 
             @Override
             public void onFailure(Call<MovieTrailer> call, Throwable t) {
-                mTvNoTrailer.setText("No internet connection to get trailers.");
+                mRvMovieTrailers.setVisibility(View.GONE);
+                mTvNoTrailer.setVisibility(View.VISIBLE);
+                mTvNoTrailer.setText(getString(R.string.no_connection_trailer));
             }
         });
     }
@@ -253,14 +261,16 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                     } else {
                         mRvMovieReviews.setVisibility(View.GONE);
                         mTvNoReview.setVisibility(View.VISIBLE);
-                        mTvNoReview.setText("No review found for this movie.");
+                        mTvNoReview.setText(getString(R.string.not_found_review));
                     }
                 }
             }
 
             @Override
             public void onFailure(Call<MovieReview> call, Throwable t) {
-                mTvNoReview.setText("No internet connection to get reviews.");
+                mRvMovieReviews.setVisibility(View.GONE);
+                mTvNoReview.setVisibility(View.VISIBLE);
+                mTvNoReview.setText(getString(R.string.no_connection_review));
             }
         });
     }
@@ -271,7 +281,11 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         String videoKey = trailer.getKey();
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("https://youtube.com/watch?v=" + videoKey));
-        startActivity(intent);
+        String title = getString(R.string.chooser);
+        Intent chooser = Intent.createChooser(intent, title);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(chooser);
+        }
     }
 
     @OnClick(R.id.mark_favorite)
@@ -288,7 +302,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                     MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
                     new String[]{id}
             );
-            mMarkFavorite.setText("Favorit");
+            mMarkFavorite.setText(getString(R.string.favorited));
             mMarkFavorite.setBackgroundColor(Color.RED);
             mMarkFavorite.setTextColor(Color.WHITE);
         } else if (mCursor.moveToFirst() && mCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
