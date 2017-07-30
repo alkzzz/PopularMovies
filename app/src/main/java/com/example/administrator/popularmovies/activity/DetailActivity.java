@@ -15,7 +15,6 @@ import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -26,7 +25,6 @@ import com.example.administrator.popularmovies.R;
 import com.example.administrator.popularmovies.adapter.MovieReviewsAdapter;
 import com.example.administrator.popularmovies.adapter.MovieTrailersAdapter;
 import com.example.administrator.popularmovies.data.MovieContract;
-import com.example.administrator.popularmovies.model.Movie;
 import com.example.administrator.popularmovies.model.MovieDetail;
 import com.example.administrator.popularmovies.model.MovieReview;
 import com.example.administrator.popularmovies.model.MovieTrailer;
@@ -147,18 +145,28 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
 
     private void fillDetail(Cursor cursor) {
         if (cursor.moveToFirst()) {
-            mIvPosterDetail.setImageResource(R.drawable.no_image);
             mTvTitle.setText(cursor.getString(INDEX_MOVIE_NAME));
             mTvDate.setText(cursor.getString(INDEX_MOVIE_RELEASE_DATE).substring(0, 4));
-            mTvRuntime.setText("-");
             mTvVoteAverage.setText(String.valueOf(cursor.getFloat(INDEX_MOVIE_USER_RATING)));
             mTvSynopsis.setText(cursor.getString(INDEX_MOVIE_SYNOPSIS));
-            mRvMovieTrailers.setVisibility(View.GONE);
-            mTvNoTrailer.setVisibility(View.VISIBLE);
-            mTvNoTrailer.setText("No internet connection to get trailers.");
-            mRvMovieReviews.setVisibility(View.GONE);
-            mTvNoReview.setVisibility(View.VISIBLE);
-            mTvNoReview.setText("No internet connection to get reviews.");
+            if(haveInternetConnection()) {
+                Picasso.with(getApplicationContext())
+                        .load(POSTER_URL + cursor.getString(INDEX_MOVIE_POSTER))
+                        .error(R.drawable.no_image)
+                        .into(mIvPosterDetail);
+                movieRuntimeRequest();
+                movieTrailerRequest();
+                movieReviewRequest();
+            } else {
+                mIvPosterDetail.setImageResource(R.drawable.no_image);
+                mTvRuntime.setText("No internet connection to get runtime.");
+                mRvMovieTrailers.setVisibility(View.GONE);
+                mTvNoTrailer.setVisibility(View.VISIBLE);
+                mTvNoTrailer.setText("No internet connection to get trailers.");
+                mRvMovieReviews.setVisibility(View.GONE);
+                mTvNoReview.setVisibility(View.VISIBLE);
+                mTvNoReview.setText("No internet connection to get reviews.");
+            }
             if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
                 mMarkFavorite.setText(getString(R.string.mark_favorite));
                 mMarkFavorite.setBackgroundColor(Color.GREEN);
@@ -172,7 +180,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         }
     }
 
-    private void makeMovieDetailRequest() {
+    private void movieRuntimeRequest() {
         String apiKey = getApplicationContext().getString(R.string.api_key);
         final MovieService movieService =
                 MovieClient.getClient().create(MovieService.class);
@@ -183,20 +191,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
             @Override
             public void onResponse(Call<MovieDetail> call, Response<MovieDetail> response) {
                 if (response.isSuccessful()) {
-                    Picasso.with(DetailActivity.this)
-                            .load(POSTER_URL + response.body().getPoster_path())
-                            .error(R.drawable.no_image)
-                            .into(mIvPosterDetail);
-                    mTvTitle.setText(response.body().getTitle());
-                    mTvDate.setText(response.body().getRelease_date().substring(0, 4));
                     mTvRuntime.setText(getString(R.string.runtime, response.body().getRuntime()));
-                    mTvVoteAverage.setText(getString(R.string.vote_average, response.body().getVote_average()));
-                    mTvSynopsis.setText(response.body().getOverview());
-                    if (mCursor.moveToFirst() && mCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
-                        mMarkFavorite.setText("Favorit");
-                        mMarkFavorite.setBackgroundColor(Color.RED);
-                        mMarkFavorite.setTextColor(Color.WHITE);
-                    }
                 } else {
                     Toast.makeText(DetailActivity.this, "Movie Not Found..", Toast.LENGTH_LONG).show();
                     new Handler().postDelayed(new Runnable() {
@@ -210,7 +205,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
 
             @Override
             public void onFailure(Call<MovieDetail> call, Throwable t) {
-                Toast.makeText(DetailActivity.this, "Connection Failed!! " + t.getMessage(), Toast.LENGTH_LONG).show();
+                mTvRuntime.setText("No runtime found for this movie.");
             }
         });
     }
