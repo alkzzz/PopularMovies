@@ -161,6 +161,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                 mMarkFavorite.setTextColor(Color.WHITE);
             }
         }
+        mCursor.close();
     }
 
     private void makeMovieDetailRequest() {
@@ -303,6 +304,5 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mCursor.close();
     }
 }

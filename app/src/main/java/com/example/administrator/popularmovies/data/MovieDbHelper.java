@@ -22,7 +22,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                         MovieEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                         MovieEntry.COLUMN_MOVIE_ID + " INTEGER NOT NULL," +
                         MovieEntry.COLUMN_NAME + " VARCHAR NOT NULL," +
-                        MovieEntry.COLUMN_POSTER + " VARCHAR NOT NULL," +
+                        MovieEntry.COLUMN_POSTER + " VARCHAR NULLABLE," +
                         MovieEntry.COLUMN_CATEGORY + " VARCHAR NOT NULL," +
                         MovieEntry.COLUMN_SYNOPSIS + " TEXT NULLABLE, " +
                         MovieEntry.COLUMN_USER_RATING + " REAL NOT NULL," +

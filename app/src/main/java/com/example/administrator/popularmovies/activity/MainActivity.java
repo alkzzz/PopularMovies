@@ -67,19 +67,13 @@ public class MainActivity extends AppCompatActivity implements
         }
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
-
+    
     @Override
     protected void onDestroy() {
         super.onDestroy();
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
         mCursor.close();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mMoviePosterAdapter.swapCursor(mCursor);
     }
 
     private void showPoster() {
