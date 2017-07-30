@@ -25,12 +25,10 @@
         <activity
             android:name=".activity.SettingsActivity"
             android:label="@string/menu_settings"
-            android:parentActivityName=".activity.MainActivity"
-            tools:targetApi="jelly_bean" />
+            android:parentActivityName=".activity.MainActivity" />
         <activity
             android:name=".activity.DetailActivity"
-            android:parentActivityName=".activity.MainActivity"
-            tools:targetApi="jelly_bean" />
+            android:parentActivityName=".activity.MainActivity" />
         <provider
             android:authorities="com.example.administrator.popularmovies"
             android:name="com.example.administrator.popularmovies.data.MovieProvider"
