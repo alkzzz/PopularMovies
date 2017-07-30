@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity implements
         super.onDestroy();
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
-        //mCursor.close();
     }
 
     private void showPoster() {
@@ -110,45 +109,12 @@ public class MainActivity extends AppCompatActivity implements
             userPref = sharedPreferences.getString(key, getString(R.string.popular_value));
         }
         if (userPref.equals(getString(R.string.popular_value))) {
-            mCursor = getPopularMovies();
-            mMoviePosterAdapter.swapCursor(mCursor);
+            getSupportLoaderManager().restartLoader(ID_MOVIE_POPULAR_LOADER, null, this);
         } else if (userPref.equals(getString(R.string.top_rated_value))) {
-            mCursor = getTopRatedMovies();
-            mMoviePosterAdapter.swapCursor(mCursor);
+            getSupportLoaderManager().restartLoader(ID_MOVIE_TOP_RATED_LOADER, null, this);
         } else if (userPref.equals(getString(R.string.favorite_value))) {
-            mCursor = getFavoriteMovies();
-            mMoviePosterAdapter.swapCursor(mCursor);
+            getSupportLoaderManager().restartLoader(ID_MOVIE_FAVORITE_LOADER, null, this);
         }
-    }
-
-    private Cursor getPopularMovies() {
-        return getContentResolver().query(
-                MovieContract.MovieEntry.CONTENT_URI,
-                null,
-                MovieContract.MovieEntry.COLUMN_CATEGORY + " = ?",
-                new String[]{"popular"},
-                null
-        );
-    }
-
-    private Cursor getTopRatedMovies() {
-        return getContentResolver().query(
-                MovieContract.MovieEntry.CONTENT_URI,
-                null,
-                MovieContract.MovieEntry.COLUMN_CATEGORY + " = ?",
-                new String[]{"top_rated"},
-                null
-        );
-    }
-
-    private Cursor getFavoriteMovies() {
-        return getContentResolver().query(
-                MovieContract.MovieEntry.CONTENT_URI,
-                null,
-                MovieContract.MovieEntry.COLUMN_IS_FAVORITE + " = 1",
-                null,
-                null
-        );
     }
 
     @Override

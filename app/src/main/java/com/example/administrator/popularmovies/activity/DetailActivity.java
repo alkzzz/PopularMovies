@@ -316,6 +316,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
 
     @Override
     protected void onDestroy() {
+        mCursor.close();
         super.onDestroy();
     }
 }
