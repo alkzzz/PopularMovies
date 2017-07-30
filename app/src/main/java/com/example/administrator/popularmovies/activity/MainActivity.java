@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
     }
-    
+
     @Override
     protected void onDestroy() {
         super.onDestroy();

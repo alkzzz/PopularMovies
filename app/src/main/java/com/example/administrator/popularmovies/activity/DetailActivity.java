@@ -98,13 +98,13 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         movie_id = intent.getIntExtra("movie_id", 0);
         mRvMovieTrailers.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         mRvMovieReviews.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-
+        mCursor = fetchMovieDetailsFromDb(movie_id);
         if (haveInternetConnection()) {
             makeMovieDetailRequest();
             movieTrailerRequest();
             movieReviewRequest();
         } else {
-            fetchMovieDetailsFromDb(movie_id);
+            fillDetail(mCursor);
         }
         showMovie();
     }
@@ -130,7 +130,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         mScrollView.setVisibility(View.VISIBLE);
     }
 
-    private void fetchMovieDetailsFromDb(int movie_id) {
+    private Cursor fetchMovieDetailsFromDb(int movie_id) {
         Uri uri = MovieContract.MovieEntry.CONTENT_URI;
         uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
         ContentResolver contentResolver = getContentResolver();
@@ -142,26 +142,30 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                 new String[]{movieID},
                 null
         );
-        if (mCursor.moveToFirst()) {
+        return mCursor;
+    }
+
+    private void fillDetail(Cursor cursor) {
+        if (cursor.moveToFirst()) {
             mIvPosterDetail.setImageResource(R.drawable.no_image);
-            mTvTitle.setText(mCursor.getString(INDEX_MOVIE_NAME));
-            mTvDate.setText(mCursor.getString(INDEX_MOVIE_RELEASE_DATE).substring(0, 4));
+            mTvTitle.setText(cursor.getString(INDEX_MOVIE_NAME));
+            mTvDate.setText(cursor.getString(INDEX_MOVIE_RELEASE_DATE).substring(0, 4));
             mTvRuntime.setText("-");
-            mTvVoteAverage.setText(String.valueOf(mCursor.getFloat(INDEX_MOVIE_USER_RATING)));
-            mTvSynopsis.setText(mCursor.getString(INDEX_MOVIE_SYNOPSIS));
+            mTvVoteAverage.setText(String.valueOf(cursor.getFloat(INDEX_MOVIE_USER_RATING)));
+            mTvSynopsis.setText(cursor.getString(INDEX_MOVIE_SYNOPSIS));
             mRvMovieTrailers.setVisibility(View.GONE);
             mTvNoTrailer.setVisibility(View.VISIBLE);
             mTvNoTrailer.setText("No internet connection to get trailers.");
             mRvMovieReviews.setVisibility(View.GONE);
             mTvNoReview.setVisibility(View.VISIBLE);
             mTvNoReview.setText("No internet connection to get reviews.");
-            if (mCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
+            if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
                 mMarkFavorite.setText("Favorit");
                 mMarkFavorite.setBackgroundColor(Color.RED);
                 mMarkFavorite.setTextColor(Color.WHITE);
             }
         }
-        mCursor.close();
+        cursor.close();
     }
 
     private void makeMovieDetailRequest() {
@@ -184,6 +188,11 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                     mTvRuntime.setText(getString(R.string.runtime, response.body().getRuntime()));
                     mTvVoteAverage.setText(getString(R.string.vote_average, response.body().getVote_average()));
                     mTvSynopsis.setText(response.body().getOverview());
+                    if (mCursor.moveToFirst() && mCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
+                        mMarkFavorite.setText("Favorit");
+                        mMarkFavorite.setBackgroundColor(Color.RED);
+                        mMarkFavorite.setTextColor(Color.WHITE);
+                    }
                 } else {
                     Toast.makeText(DetailActivity.this, "Movie Not Found..", Toast.LENGTH_LONG).show();
                     new Handler().postDelayed(new Runnable() {
