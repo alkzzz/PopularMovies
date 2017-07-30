@@ -100,7 +100,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         mRvMovieReviews.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         mCursor = fetchMovieDetailsFromDb(movie_id);
         if (haveInternetConnection()) {
-            makeMovieDetailRequest();
+            fillDetail(mCursor);
             movieTrailerRequest();
             movieReviewRequest();
         } else {
@@ -159,13 +159,17 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
             mRvMovieReviews.setVisibility(View.GONE);
             mTvNoReview.setVisibility(View.VISIBLE);
             mTvNoReview.setText("No internet connection to get reviews.");
-            if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
+            if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
+                mMarkFavorite.setText(getString(R.string.mark_favorite));
+                mMarkFavorite.setBackgroundColor(Color.GREEN);
+                mMarkFavorite.setTextColor(Color.BLACK);
+            }
+            else if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
                 mMarkFavorite.setText("Favorit");
                 mMarkFavorite.setBackgroundColor(Color.RED);
                 mMarkFavorite.setTextColor(Color.WHITE);
             }
         }
-        cursor.close();
     }
 
     private void makeMovieDetailRequest() {
@@ -277,7 +281,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
 
     @OnClick(R.id.mark_favorite)
     public void markFavorite() {
-        if (mMarkFavorite.getText().equals(getString(R.string.mark_favorite))) {
+        if (mCursor.moveToFirst() && mCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
             Uri uri = MovieContract.MovieEntry.CONTENT_URI;
             uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
             String id = String.valueOf(movie_id);
@@ -292,7 +296,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
             mMarkFavorite.setText("Favorit");
             mMarkFavorite.setBackgroundColor(Color.RED);
             mMarkFavorite.setTextColor(Color.WHITE);
-        } else {
+        } else if (mCursor.moveToFirst() && mCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
             Uri uri = MovieContract.MovieEntry.CONTENT_URI;
             uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
             String id = String.valueOf(movie_id);

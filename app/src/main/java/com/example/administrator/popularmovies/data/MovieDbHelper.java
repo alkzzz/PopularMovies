@@ -28,7 +28,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                         MovieEntry.COLUMN_USER_RATING + " REAL NOT NULL," +
                         MovieEntry.COLUMN_RELEASE_DATE + " TEXT NOT NULL," +
                         MovieEntry.COLUMN_IS_FAVORITE + " INTEGER DEFAULT 0," +
-                        " UNIQUE (" + MovieEntry.COLUMN_MOVIE_ID + ") ON CONFLICT REPLACE);";
+                        " UNIQUE (" + MovieEntry.COLUMN_MOVIE_ID + ") ON CONFLICT IGNORE);";
 
         db.execSQL(SQL_CREATE_MOVIE_TABLE);
     }

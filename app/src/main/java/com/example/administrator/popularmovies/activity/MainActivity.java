@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onDestroy();
         PreferenceManager.getDefaultSharedPreferences(this)
                 .unregisterOnSharedPreferenceChangeListener(this);
-        mCursor.close();
+        //mCursor.close();
     }
 
     private void showPoster() {

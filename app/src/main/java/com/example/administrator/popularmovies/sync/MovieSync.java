@@ -72,7 +72,6 @@ public class MovieSync {
             value.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, movie.getOverview());
             value.put(MovieContract.MovieEntry.COLUMN_USER_RATING, movie.getVote_average());
             value.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, movie.getRelease_date());
-            value.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
             contentValues[i] = value;
             i++;
         }
