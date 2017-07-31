@@ -67,7 +67,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     @BindView(R.id.rv_movie_reviews)
     RecyclerView mRvMovieReviews;
     @BindView(R.id.scrollView)
-    ScrollView mScrollView;
+    NestedScrollView mScrollView;
     @BindView(R.id.tv_no_trailer)
     TextView mTvNoTrailer;
     @BindView(R.id.tv_no_review)
@@ -78,7 +78,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     private List<MovieTrailer.ResultsBean> mTrailerList;
     private List<MovieReview.ResultsBean> mReviewList;
     private Cursor mCursor;
-    private int scrollStateX,scrollStateY;
+    private int scrollState;
     private Parcelable trailerState;
     private Parcelable reviewState;
     private LinearLayoutManager mTrailerLayoutManager;
@@ -146,10 +146,8 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     @Override
     public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
         super.onSaveInstanceState(outState, outPersistentState);
-        scrollStateX = mScrollView.getScrollX();
-        outState.putInt("X_SCROLLVIEW_POSITION", scrollStateX);
-        scrollStateY = mScrollView.getScrollY();
-        outState.putInt("Y_SCROLLVIEW_POSITION", scrollStateY);
+        scrollState = mScrollView.getScrollY();
+        outState.putInt("SCROLLVIEW_POSITION", scrollState);
         trailerState = mTrailerLayoutManager.onSaveInstanceState();
         outState.putParcelable("TRAILER_POSITION", trailerState);
         reviewState = mReviewLayoutManager.onSaveInstanceState();
@@ -160,11 +158,16 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         if (savedInstanceState != null) {
-            scrollStateX = savedInstanceState.getInt("X_SCROLLVIEW_POSITION");
-            scrollStateY = savedInstanceState.getInt("Y_SCROLLVIEW_POSITION");
+            scrollState = savedInstanceState.getInt("SCROLLVIEW_POSITION");
             trailerState = savedInstanceState.getParcelable("TRAILER_POSITION");
             reviewState = savedInstanceState.getParcelable("REVIEW_POSITION");
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        scrollState = mScrollView.getScrollY();
     }
 
     @Override
@@ -175,7 +178,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
             @Override
             public void run()
             {
-                mScrollView.scrollTo(scrollStateX, scrollStateY);
+                mScrollView.smoothScrollTo(0, scrollState);
             }
         });
         if (trailerState != null) mTrailerLayoutManager.onRestoreInstanceState(trailerState);
