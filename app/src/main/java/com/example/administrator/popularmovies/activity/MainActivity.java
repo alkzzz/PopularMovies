@@ -3,6 +3,8 @@ package com.example.administrator.popularmovies.activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -32,14 +34,16 @@ public class MainActivity extends AppCompatActivity implements
     private RecyclerView recyclerView;
     private ProgressBar mProgressBar;
     private MoviePosterAdapter mMoviePosterAdapter;
-    private int mPosition = RecyclerView.NO_POSITION;
-    private SharedPreferences sharedPreferences;
+    private GridLayoutManager mLayoutManager;
+    private Parcelable state;
 
     private static final int ID_MOVIE_POPULAR_LOADER = 9;
     private static final int ID_MOVIE_TOP_RATED_LOADER = 19;
     private static final int ID_MOVIE_FAVORITE_LOADER = 29;
 
     private static final int INDEX_MOVIE_ID = 1;
+
+    private static final String MOVIE_POSTER_STATE = "POSTER_POSITION";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +52,13 @@ public class MainActivity extends AppCompatActivity implements
 
         mProgressBar = (ProgressBar) findViewById(R.id.pb_progressBar);
         recyclerView = (RecyclerView) findViewById(R.id.rv_movie_poster);
-        recyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(), 2));
+        mLayoutManager = new  GridLayoutManager(getApplicationContext(), 2);
+        recyclerView.setLayoutManager(mLayoutManager);
 
         mMoviePosterAdapter = new MoviePosterAdapter(this, this);
         recyclerView.setAdapter(mMoviePosterAdapter);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         showLoading();
         MovieSync.fetchMovieAndInsert(this);
@@ -129,6 +134,29 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        state = mLayoutManager.onSaveInstanceState();
+        outState.putParcelable(MOVIE_POSTER_STATE,state);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            state = savedInstanceState.getParcelable(MOVIE_POSTER_STATE);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (state != null) {
+            mLayoutManager.onRestoreInstanceState(state);
+        }
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case ID_MOVIE_POPULAR_LOADER:
@@ -166,10 +194,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mMoviePosterAdapter.swapCursor(data);
-        mCursor = data;
-        if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
-        recyclerView.smoothScrollToPosition(mPosition);
         if (data.getCount() != 0) showPoster();
+        mCursor = data;
     }
 
     @Override

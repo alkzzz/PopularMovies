@@ -24,8 +24,8 @@ public class MovieSync {
         String apiKey = context.getString(R.string.api_key);
         MovieService apiService =
                 MovieClient.getClient().create(MovieService.class);
-        Call<Movie> popularMovies = apiService.getPopularMovies(apiKey, context.getString(R.string.popular_value));
-        Call<Movie> topRatedMovies = apiService.getTopRatedMovies(apiKey, context.getString(R.string.top_rated_value));
+        Call<Movie> popularMovies = apiService.getPopularMovies(apiKey);
+        Call<Movie> topRatedMovies = apiService.getTopRatedMovies(apiKey);
 
         popularMovies.enqueue(new Callback<Movie>() {
 

@@ -11,6 +11,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
+import android.os.PersistableBundle;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +20,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,7 +67,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     @BindView(R.id.rv_movie_reviews)
     RecyclerView mRvMovieReviews;
     @BindView(R.id.scrollView)
-    NestedScrollView mScrollView;
+    ScrollView mScrollView;
     @BindView(R.id.tv_no_trailer)
     TextView mTvNoTrailer;
     @BindView(R.id.tv_no_review)
@@ -75,6 +78,11 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     private List<MovieTrailer.ResultsBean> mTrailerList;
     private List<MovieReview.ResultsBean> mReviewList;
     private Cursor mCursor;
+    private int scrollStateX,scrollStateY;
+    private Parcelable trailerState;
+    private Parcelable reviewState;
+    private LinearLayoutManager mTrailerLayoutManager;
+    private LinearLayoutManager mReviewLayoutManager;
 
     private static final int INDEX_MOVIE_ID = 1;
     private static final int INDEX_MOVIE_NAME = 2;
@@ -99,8 +107,10 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         } else {
             movie_id = bundle.getInt("movie_id");
         }
-        mRvMovieTrailers.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        mRvMovieReviews.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        mTrailerLayoutManager = new LinearLayoutManager(getApplicationContext());
+        mReviewLayoutManager = new LinearLayoutManager(getApplicationContext());
+        mRvMovieTrailers.setLayoutManager(mTrailerLayoutManager);
+        mRvMovieReviews.setLayoutManager(mReviewLayoutManager);
         mCursor = fetchMovieDetailsFromDb(movie_id);
         if (haveInternetConnection()) {
             fillDetail(mCursor);
@@ -131,6 +141,45 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     {
         mProgressBar.setVisibility(View.INVISIBLE);
         mScrollView.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+        scrollStateX = mScrollView.getScrollX();
+        outState.putInt("X_SCROLLVIEW_POSITION", scrollStateX);
+        scrollStateY = mScrollView.getScrollY();
+        outState.putInt("Y_SCROLLVIEW_POSITION", scrollStateY);
+        trailerState = mTrailerLayoutManager.onSaveInstanceState();
+        outState.putParcelable("TRAILER_POSITION", trailerState);
+        reviewState = mReviewLayoutManager.onSaveInstanceState();
+        outState.putParcelable("REVIEW_POSITION", reviewState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState != null) {
+            scrollStateX = savedInstanceState.getInt("X_SCROLLVIEW_POSITION");
+            scrollStateY = savedInstanceState.getInt("Y_SCROLLVIEW_POSITION");
+            trailerState = savedInstanceState.getParcelable("TRAILER_POSITION");
+            reviewState = savedInstanceState.getParcelable("REVIEW_POSITION");
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mScrollView.post(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                mScrollView.scrollTo(scrollStateX, scrollStateY);
+            }
+        });
+        if (trailerState != null) mTrailerLayoutManager.onRestoreInstanceState(trailerState);
+        if (reviewState != null) mReviewLayoutManager.onRestoreInstanceState(reviewState);
     }
 
     private Cursor fetchMovieDetailsFromDb(int movie_id) {

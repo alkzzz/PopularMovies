@@ -25,8 +25,8 @@
     <string name="popular_label">Most Popular</string>
     <string name="top_rated_label">Highest Rated</string>
     <string name="favorite_label">Favorite</string>
-    <string name="popular_value" translatable="false">popularity.desc</string>
-    <string name="top_rated_value" translatable="false">vote_average.desc</string>
+    <string name="popular_value" translatable="false">popular</string>
+    <string name="top_rated_value" translatable="false">top_rated</string>
     <string name="favorite_value" translatable="false">favorite</string>
 
 </resources>

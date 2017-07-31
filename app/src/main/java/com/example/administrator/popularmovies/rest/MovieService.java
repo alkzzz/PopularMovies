@@ -12,10 +12,10 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface MovieService {
-    @GET("discover/movie")
-    Call<Movie> getPopularMovies(@Query("api_key") String apiKey, @Query("sort_by") String sortBy);
-    @GET("discover/movie")
-    Call<Movie> getTopRatedMovies(@Query("api_key") String apiKey, @Query("sort_by") String sortBy);
+    @GET("movie/popular")
+    Call<Movie> getPopularMovies(@Query("api_key") String apiKey);
+    @GET("discover/top_rated")
+    Call<Movie> getTopRatedMovies(@Query("api_key") String apiKey);
     @GET("movie/{id}")
     Call<MovieDetail> getMovieDetails(@Path("id") int id, @Query("api_key") String apiKey);
     @GET("movie/{id}/videos")
