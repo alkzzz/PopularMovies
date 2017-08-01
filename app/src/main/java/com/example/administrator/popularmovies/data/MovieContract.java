@@ -11,6 +11,12 @@ public class MovieContract {
 
     public static final String PATH_MOVIE = "movies";
 
+    public static final String PATH_MOVIE_WITH_ID = "movies/#";
+
+    public static final String PATH_TRAILER = "trailers";
+
+    public static final String PATH_MOVIE_WITH_ID_TRAILERS = "movies/#/trailers";
+
     public static final class MovieEntry implements BaseColumns {
 
         public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_MOVIE).build();
@@ -31,7 +37,24 @@ public class MovieContract {
 
         public static final String COLUMN_RELEASE_DATE = "release_date";
 
+        public static final String COLUMN_RUNTIME = "runtime";
+
         public static final String COLUMN_IS_FAVORITE = "is_favorite";
+    }
+
+    public static final class TrailerEntry implements BaseColumns {
+
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_MOVIE_WITH_ID_TRAILERS).build();
+
+        public static final String TABLE_NAME = "trailer";
+
+        public static final String COLUMN_MOVIE_ID = "movie_id";
+
+        public static final String COLUMN_NAME = "name";
+
+        public static final String COLUMN_KEY = "key";
+
+        public static final String COLUMN_TYPE = "type";
     }
 
 }

@@ -16,6 +16,8 @@ import android.widget.ImageView;
 import com.example.administrator.popularmovies.R;
 import com.example.administrator.popularmovies.data.MovieContract;
 import com.example.administrator.popularmovies.model.Movie;
+import com.example.administrator.popularmovies.model.MovieReview;
+import com.example.administrator.popularmovies.model.MovieTrailer;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -57,8 +59,8 @@ public class MoviePosterAdapter extends RecyclerView.Adapter<MoviePosterAdapter.
     }
 
     public PosterHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_poster_row, parent, false);
-        return new PosterHolder(view);
+        View viewDetail = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_poster_row, parent, false);
+        return new PosterHolder(viewDetail);
     }
 
     @Override

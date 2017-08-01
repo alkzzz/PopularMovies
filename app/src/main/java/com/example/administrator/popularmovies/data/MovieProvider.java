@@ -1,6 +1,7 @@
 package com.example.administrator.popularmovies.data;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -14,6 +15,9 @@ public class MovieProvider extends ContentProvider {
 
     public static final int MOVIES = 100;
     public static final int MOVIE_WITH_ID = 101;
+
+    public static final int TRAILERS = 200;
+
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private MovieDbHelper mMovieDbHelper;
 
@@ -22,7 +26,8 @@ public class MovieProvider extends ContentProvider {
         String authority = MovieContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, MovieContract.PATH_MOVIE, MOVIES);
-        matcher.addURI(authority, MovieContract.PATH_MOVIE + "/#", MOVIE_WITH_ID);
+        matcher.addURI(authority, MovieContract.PATH_MOVIE_WITH_ID, MOVIE_WITH_ID);
+        matcher.addURI(authority, MovieContract.PATH_MOVIE_WITH_ID_TRAILERS, TRAILERS);
 
         return matcher;
     }
@@ -36,17 +41,17 @@ public class MovieProvider extends ContentProvider {
     @Override
     public int bulkInsert(@NonNull Uri uri, @NonNull ContentValues[] values) {
 
-        final SQLiteDatabase db = mMovieDbHelper.getReadableDatabase();
+        final SQLiteDatabase db = mMovieDbHelper.getWritableDatabase();
 
         switch (sUriMatcher.match(uri)) {
             case MOVIES:
                 db.beginTransaction();
-                int rowInserted = 0;
+                int movieInserted = 0;
                 try {
                     for(ContentValues value: values) {
                         long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
                         if (_id != -1) {
-                            rowInserted++;
+                            movieInserted++;
                         }
                     }
                     db.setTransactionSuccessful();
@@ -54,10 +59,30 @@ public class MovieProvider extends ContentProvider {
                     db.endTransaction();
                 }
 
-                if (rowInserted > 0) {
+                if (movieInserted > 0) {
                     getContext().getContentResolver().notifyChange(uri, null);
                 }
-                return rowInserted;
+                return movieInserted;
+
+            case TRAILERS:
+                db.beginTransaction();
+                int trailerInserted = 0;
+                try {
+                    for(ContentValues value: values) {
+                        long _id = db.insert(MovieContract.TrailerEntry.TABLE_NAME, null, value);
+                        if (_id != -1) {
+                            trailerInserted++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                if (trailerInserted > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+                return trailerInserted;
 
             default:
                 return super.bulkInsert(uri, values);
@@ -80,6 +105,7 @@ public class MovieProvider extends ContentProvider {
                         null,
                         sortOrder);
                 break;
+
             case MOVIE_WITH_ID:
                 String id = uri.getPathSegments().get(1);
                 cursor = db.query(
@@ -91,6 +117,18 @@ public class MovieProvider extends ContentProvider {
                         null,
                         sortOrder);
                 break;
+
+            case TRAILERS:
+                cursor = db.query(
+                        MovieContract.TrailerEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
+                break;
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: "+uri);
         }
@@ -106,7 +144,9 @@ public class MovieProvider extends ContentProvider {
 
     @Nullable
     @Override
-    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) { return null; }
+    public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
+        return null;
+    }
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
