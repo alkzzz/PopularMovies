@@ -133,27 +133,32 @@ public class MainActivity extends AppCompatActivity implements
         startActivity(intent);
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
-        state = mLayoutManager.onSaveInstanceState();
-        outState.putParcelable(MOVIE_POSTER_STATE,state);
-    }
+//    @Override
+//    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+//        super.onSaveInstanceState(outState, outPersistentState);
+//        state = mLayoutManager.onSaveInstanceState();
+//        outState.putParcelable(MOVIE_POSTER_STATE,state);
+//    }
+//
+//    @Override
+//    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+//        super.onRestoreInstanceState(savedInstanceState);
+//        if (savedInstanceState != null) {
+//            state = savedInstanceState.getParcelable(MOVIE_POSTER_STATE);
+//        }
+//    }
+
 
     @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            state = savedInstanceState.getParcelable(MOVIE_POSTER_STATE);
-        }
+    protected void onPause() {
+        super.onPause();
+        mLayoutManager.onSaveInstanceState();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (state != null) {
-            mLayoutManager.onRestoreInstanceState(state);
-        }
+        mLayoutManager.onRestoreInstanceState(state);
     }
 
     @Override

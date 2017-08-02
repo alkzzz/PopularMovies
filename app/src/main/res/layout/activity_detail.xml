@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"/>
 
-    <android.support.v4.widget.NestedScrollView
+    <ScrollView
         android:id="@+id/scrollView"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
@@ -144,7 +144,8 @@
                 app:layout_constraintTop_toBottomOf="@+id/tv_trailer_title"
                 app:layout_constraintLeft_toLeftOf="parent"
                 android:layout_marginLeft="16dp"
-                android:layout_marginStart="16dp"/>
+                android:layout_marginStart="16dp"
+                android:visibility="gone"/>
 
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/rv_movie_trailers"
@@ -171,6 +172,7 @@
                 android:id="@+id/tv_no_review"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@+id/tv_review_title"
                 app:layout_constraintLeft_toLeftOf="parent"
                 android:layout_marginLeft="16dp"
@@ -186,6 +188,6 @@
 
         </android.support.constraint.ConstraintLayout>
 
-    </android.support.v4.widget.NestedScrollView>
+    </ScrollView>
 
 </RelativeLayout>

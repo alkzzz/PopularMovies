@@ -13,6 +13,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.os.PersistableBundle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -44,7 +47,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetailActivity extends AppCompatActivity implements MovieTrailersAdapter.ItemClickListener {
+public class DetailActivity extends AppCompatActivity implements MovieTrailersAdapter.ItemClickListener, LoaderManager.LoaderCallbacks<Cursor>{
 
     @BindView(R.id.tv_title)
     TextView mTvTitle;
@@ -67,7 +70,7 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     @BindView(R.id.rv_movie_reviews)
     RecyclerView mRvMovieReviews;
     @BindView(R.id.scrollView)
-    NestedScrollView mScrollView;
+    ScrollView mScrollView;
     @BindView(R.id.tv_no_trailer)
     TextView mTvNoTrailer;
     @BindView(R.id.tv_no_review)
@@ -93,6 +96,8 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     private static final int INDEX_MOVIE_RELEASE_DATE = 7;
     private static final int INDEX_MOVIE_IS_FAVORITE = 8;
 
+    private static final int ID_MOVIE_DETAIL_LOADER = 19;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
@@ -111,15 +116,12 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
         mReviewLayoutManager = new LinearLayoutManager(getApplicationContext());
         mRvMovieTrailers.setLayoutManager(mTrailerLayoutManager);
         mRvMovieReviews.setLayoutManager(mReviewLayoutManager);
-        mCursor = fetchMovieDetailsFromDb(movie_id);
+
         if (haveInternetConnection()) {
-            fillDetail(mCursor);
             movieTrailerRequest();
             movieReviewRequest();
-        } else {
-            fillDetail(mCursor);
         }
-        showMovie();
+        getSupportLoaderManager().initLoader(ID_MOVIE_DETAIL_LOADER, null, this);
     }
 
     public boolean haveInternetConnection() {
@@ -144,31 +146,12 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
-        scrollState = mScrollView.getScrollY();
-        outState.putInt("SCROLLVIEW_POSITION", scrollState);
-        trailerState = mTrailerLayoutManager.onSaveInstanceState();
-        outState.putParcelable("TRAILER_POSITION", trailerState);
-        reviewState = mReviewLayoutManager.onSaveInstanceState();
-        outState.putParcelable("REVIEW_POSITION", reviewState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState != null) {
-            scrollState = savedInstanceState.getInt("SCROLLVIEW_POSITION");
-            trailerState = savedInstanceState.getParcelable("TRAILER_POSITION");
-            reviewState = savedInstanceState.getParcelable("REVIEW_POSITION");
-        }
-    }
-
-    @Override
     protected void onPause() {
         super.onPause();
         scrollState = mScrollView.getScrollY();
-    }
+        mTrailerLayoutManager.onSaveInstanceState();
+        mReviewLayoutManager.onSaveInstanceState();
+}
 
     @Override
     protected void onResume() {
@@ -181,23 +164,8 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
                 mScrollView.smoothScrollTo(0, scrollState);
             }
         });
-        if (trailerState != null) mTrailerLayoutManager.onRestoreInstanceState(trailerState);
-        if (reviewState != null) mReviewLayoutManager.onRestoreInstanceState(reviewState);
-    }
-
-    private Cursor fetchMovieDetailsFromDb(int movie_id) {
-        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-        uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
-        ContentResolver contentResolver = getContentResolver();
-        String movieID = String.valueOf(movie_id);
-        mCursor = contentResolver.query(
-                uri,
-                null,
-                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
-                new String[]{movieID},
-                null
-        );
-        return mCursor;
+        mTrailerLayoutManager.onRestoreInstanceState(trailerState);
+        mReviewLayoutManager.onRestoreInstanceState(reviewState);
     }
 
     private void fillDetail(Cursor cursor) {
@@ -376,8 +344,29 @@ public class DetailActivity extends AppCompatActivity implements MovieTrailersAd
     }
 
     @Override
-    protected void onDestroy() {
-        mCursor.close();
-        super.onDestroy();
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+        uri = uri.buildUpon().appendPath(String.valueOf(movie_id)).build();
+        String movieID = String.valueOf(movie_id);
+        return new CursorLoader(
+                this,
+                uri,
+                null,
+                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                new String[]{movieID},
+                null
+        );
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mCursor = data;
+        fillDetail(mCursor);
+        showMovie();
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mCursor = null;
     }
 }
