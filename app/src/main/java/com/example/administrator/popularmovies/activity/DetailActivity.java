@@ -105,8 +105,9 @@ public class DetailActivity extends AppCompatActivity implements
                         this,
                         trailerUri,
                         null,
-                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?",
-                        new String[]{String.valueOf(movie_id)},
+                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ? AND "+
+                                MovieContract.TrailerEntry.COLUMN_TYPE + " = ?",
+                        new String[]{String.valueOf(movie_id), "Trailer"},
                         null
                 );
             default:
@@ -118,14 +119,15 @@ public class DetailActivity extends AppCompatActivity implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case ID_MOVIE_DETAIL_LOADER:
-                if (data.getCount() != 0) {
-                    showMovie();
-                    mMovieDetailAdapter.swapMovieCursor(data);
-                }
+                mMovieDetailAdapter.swapMovieCursor(data);
+                break;
             case ID_MOVIE_TRAILER_LOADER:
                 mMovieDetailAdapter.swapTrailerCursor(data);
+                break;
         }
-
+        if (data.getCount() != 0) {
+            showMovie();
+        }
     }
 
     @Override

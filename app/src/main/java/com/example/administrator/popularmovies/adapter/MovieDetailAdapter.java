@@ -111,11 +111,13 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
         switch (holder.getItemViewType()) {
             case VIEW_DETAIL:
                 configureDetailViewHolder(holder, position);
+                break;
             case VIEW_TRAILER:
-                configureDetailViewHolder(holder, position);
+                configureTrailerHolder(holder, position);
+                break;
             case VIEW_REVIEW:
-                configureDetailViewHolder(holder, position);
-
+                configureReviewViewHolder(holder, position);
+                break;
         }
     }
 
@@ -144,8 +146,8 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
     }
 
     private void configureTrailerHolder(CustomViewHolder trailerHolder, int position) {
-        if (mTrailerCursor.moveToFirst()) {
-            trailerHolder.tv_trailerCount.setText("Trailer " + (position + 1));
+        if (mTrailerCursor.moveToPosition(position)) {
+            trailerHolder.tv_trailerCount.setText("Trailer " + (position));
             trailerHolder.tv_trailerName.setText(mTrailerCursor.getString(INDEX_TRAILER_NAME));
         }
     }
