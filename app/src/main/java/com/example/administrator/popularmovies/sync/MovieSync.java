@@ -91,6 +91,7 @@ public class MovieSync {
             @Override
             public void onResponse(Call<MovieReview> call, Response<MovieReview> response) {
                 List<MovieReview.ResultsBean> mReviewList = response.body().getResults();
+                bulkInsertReviews(context, mReviewList, id);
             }
 
             @Override
@@ -169,7 +170,25 @@ public class MovieSync {
             contentValues[i] = value;
             i++;
         }
-        Log.d("coba", String.valueOf(trailerUri));
         return contentResolver.bulkInsert(trailerUri, contentValues);
+    }
+
+    private static long bulkInsertReviews(Context context, List<MovieReview.ResultsBean> reviewList, int movieID) {
+        Uri detailUri = MovieContract.MovieEntry.CONTENT_URI;
+        detailUri = detailUri.buildUpon().appendPath(String.valueOf(movieID)).build();
+        Uri reviewUri = detailUri.buildUpon().appendPath(MovieContract.PATH_REVIEW).build();
+        ContentResolver contentResolver = context.getContentResolver();
+        ContentValues[] contentValues = new ContentValues[reviewList.size()];
+        int i = 0;
+        for (MovieReview.ResultsBean review : reviewList) {
+            ContentValues value = new ContentValues();
+            value.put(MovieContract.ReviewEntry.COLUMN_MOVIE_ID, movieID);
+            value.put(MovieContract.ReviewEntry.COLUMN_REVIEW_ID, review.getId());
+            value.put(MovieContract.ReviewEntry.COLUMN_AUTHOR, review.getAuthor());
+            value.put(MovieContract.ReviewEntry.COLUMN_CONTENT, review.getContent());
+            contentValues[i] = value;
+            i++;
+        }
+        return contentResolver.bulkInsert(reviewUri, contentValues);
     }
 }

@@ -25,8 +25,7 @@ import com.example.administrator.popularmovies.sync.MovieSync;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class DetailActivity extends AppCompatActivity implements
-        MovieDetailAdapter.ItemClickListener, LoaderManager.LoaderCallbacks<Cursor> {
+public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     @BindView(R.id.pb_movieDetail)
     ProgressBar mPbMovieDetail;
@@ -37,6 +36,7 @@ public class DetailActivity extends AppCompatActivity implements
 
     private static final int ID_MOVIE_DETAIL_LOADER = 9;
     private static final int ID_MOVIE_TRAILER_LOADER = 19;
+    private static final int ID_MOVIE_REVIEW_LOADER = 29;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,19 +57,11 @@ public class DetailActivity extends AppCompatActivity implements
 
         mRvMovieDetail.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
 
-        mMovieDetailAdapter = new MovieDetailAdapter(this, this);
+        mMovieDetailAdapter = new MovieDetailAdapter(this);
         mRvMovieDetail.setAdapter(mMovieDetailAdapter);
         getSupportLoaderManager().initLoader(ID_MOVIE_DETAIL_LOADER, null, this);
         getSupportLoaderManager().initLoader(ID_MOVIE_TRAILER_LOADER, null, this);
-    }
-
-    public boolean haveInternetConnection() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null &&
-                activeNetwork.isConnectedOrConnecting();
+        getSupportLoaderManager().initLoader(ID_MOVIE_REVIEW_LOADER, null, this);
     }
 
     private void showLoading() {
@@ -87,6 +79,7 @@ public class DetailActivity extends AppCompatActivity implements
         Uri detailUri = MovieContract.MovieEntry.CONTENT_URI;
         detailUri = detailUri.buildUpon().appendPath(String.valueOf(movie_id)).build();
         Uri trailerUri = detailUri.buildUpon().appendPath(MovieContract.PATH_TRAILER).build();
+        Uri reviewUri = detailUri.buildUpon().appendPath(MovieContract.PATH_REVIEW).build();
         switch (id) {
             case (ID_MOVIE_DETAIL_LOADER):
                 return new CursorLoader(
@@ -102,9 +95,18 @@ public class DetailActivity extends AppCompatActivity implements
                         this,
                         trailerUri,
                         null,
-                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?"
-                               + "AND "+ MovieContract.TrailerEntry.COLUMN_TYPE + " = ?",
+                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?" +
+                                "AND " + MovieContract.TrailerEntry.COLUMN_TYPE + " = ?",
                         new String[]{String.valueOf(movie_id), "Trailer"},
+                        null
+                );
+            case (ID_MOVIE_REVIEW_LOADER):
+                return new CursorLoader(
+                        this,
+                        reviewUri,
+                        null,
+                        MovieContract.ReviewEntry.COLUMN_MOVIE_ID + " = ?",
+                        new String[]{String.valueOf(movie_id)},
                         null
                 );
             default:
@@ -121,6 +123,9 @@ public class DetailActivity extends AppCompatActivity implements
             case ID_MOVIE_TRAILER_LOADER:
                 mMovieDetailAdapter.swapTrailerCursor(data);
                 break;
+            case ID_MOVIE_REVIEW_LOADER:
+                mMovieDetailAdapter.swapReviewCursor(data);
+                break;
         }
         if (data.getCount() != 0) {
             showMovie();
@@ -133,119 +138,5 @@ public class DetailActivity extends AppCompatActivity implements
         mMovieDetailAdapter.swapTrailerCursor(null);
         mMovieDetailAdapter.swapReviewCursor(null);
     }
-
-    @Override
-    public void onItemClick(int position) {
-
-    }
-
-//    private void fillDetail(Cursor cursor) {
-//        if (cursor.moveToFirst()) {
-//            mTvTitle.setText(cursor.getString(INDEX_MOVIE_NAME));
-//            mTvDate.setText(cursor.getString(INDEX_MOVIE_RELEASE_DATE).substring(0, 4));
-//            mTvVoteAverage.setText(String.valueOf(cursor.getFloat(INDEX_MOVIE_USER_RATING)));
-//            mTvSynopsis.setText(cursor.getString(INDEX_MOVIE_SYNOPSIS));
-//            if (haveInternetConnection()) {
-//                Picasso.with(getApplicationContext())
-//                        .load(POSTER_URL + cursor.getString(INDEX_MOVIE_POSTER))
-//                        .error(R.drawable.no_image)
-//                        .into(mIvPosterDetail);
-//                movieRuntimeRequest();
-//                movieTrailerRequest();
-//                movieReviewRequest();
-//            } else {
-//                mIvPosterDetail.setImageResource(R.drawable.no_image);
-//                mTvRuntime.setText(getString(R.string.no_connection_runtime));
-//                mRvMovieTrailers.setVisibility(View.GONE);
-//                mTvNoTrailer.setVisibility(View.VISIBLE);
-//                mTvNoTrailer.setText(getString(R.string.no_connection_trailer));
-//                mRvMovieReviews.setVisibility(View.GONE);
-//                mTvNoReview.setVisibility(View.VISIBLE);
-//                mTvNoReview.setText(getString(R.string.no_connection_review));
-//            }
-//            if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
-//                mMarkFavorite.setText(getString(R.string.mark_favorite));
-//                mMarkFavorite.setBackgroundColor(Color.GREEN);
-//                mMarkFavorite.setTextColor(Color.BLACK);
-//            } else if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
-//                mMarkFavorite.setText(getString(R.string.favorited));
-//                mMarkFavorite.setBackgroundColor(Color.RED);
-//                mMarkFavorite.setTextColor(Color.WHITE);
-//            }
-//        }
-//    }
-
-//    private void movieTrailerRequest() {
-//        String apiKey = getApplicationContext().getString(R.string.api_key);
-//        final MovieService movieService = MovieClient.getClient().create(MovieService.class);
-//
-//        Call<MovieTrailer> call = movieService.getMovieTrailers(movie_id, apiKey);
-//        call.enqueue(new Callback<MovieTrailer>() {
-//            @Override
-//            public void onResponse(Call<MovieTrailer> call, Response<MovieTrailer> response) {
-//                if (response.isSuccessful()) {
-//                    mTrailerList = response.body().getResults();
-//                    if (mTrailerList.size() > 0) {
-//                        mRvMovieTrailers.setAdapter(new MovieTrailersAdapter(DetailActivity.this, mTrailerList, DetailActivity.this));
-//                    } else {
-//                        mRvMovieTrailers.setVisibility(View.GONE);
-//                        mTvNoTrailer.setVisibility(View.VISIBLE);
-//                        mTvNoTrailer.setText(getString(R.string.not_found_trailer));
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<MovieTrailer> call, Throwable t) {
-//                mRvMovieTrailers.setVisibility(View.GONE);
-//                mTvNoTrailer.setVisibility(View.VISIBLE);
-//                mTvNoTrailer.setText(getString(R.string.no_connection_trailer));
-//            }
-//        });
-//    }
-
-//    private void movieReviewRequest() {
-//        String apiKey = getApplicationContext().getString(R.string.api_key);
-//        final MovieService movieService = MovieClient.getClient().create(MovieService.class);
-//
-//
-//        Call<MovieReview> call = movieService.getMovieReviews(movie_id, apiKey);
-//        call.enqueue(new Callback<MovieReview>() {
-//            @Override
-//            public void onResponse(Call<MovieReview> call, Response<MovieReview> response) {
-//                if (response.isSuccessful()) {
-//                    mReviewList = response.body().getResults();
-//                    if (mReviewList.size() > 0) {
-//                        mRvMovieReviews.setAdapter(new MovieReviewsAdapter(DetailActivity.this, mReviewList));
-//                    } else {
-//                        mRvMovieReviews.setVisibility(View.GONE);
-//                        mTvNoReview.setVisibility(View.VISIBLE);
-//                        mTvNoReview.setText(getString(R.string.not_found_review));
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<MovieReview> call, Throwable t) {
-//                mRvMovieReviews.setVisibility(View.GONE);
-//                mTvNoReview.setVisibility(View.VISIBLE);
-//                mTvNoReview.setText(getString(R.string.no_connection_review));
-//            }
-//        });
-//    }
-
-//    @Override
-//    public void onItemClick(int position) {
-//        MovieTrailer.ResultsBean trailer = mTrailerList.get(position);
-//        String videoKey = trailer.getKey();
-//        Intent intent = new Intent(Intent.ACTION_VIEW);
-//        intent.setData(Uri.parse("https://youtube.com/watch?v=" + videoKey));
-//        String title = getString(R.string.chooser);
-//        Intent chooser = Intent.createChooser(intent, title);
-//        if (intent.resolveActivity(getPackageManager()) != null) {
-//            startActivity(chooser);
-//        }
-//    }
-//
 
 }

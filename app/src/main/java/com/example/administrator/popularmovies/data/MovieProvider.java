@@ -18,6 +18,8 @@ public class MovieProvider extends ContentProvider {
 
     public static final int TRAILERS = 200;
 
+    public static final int REVIEWS = 300;
+
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private MovieDbHelper mMovieDbHelper;
 
@@ -28,6 +30,7 @@ public class MovieProvider extends ContentProvider {
         matcher.addURI(authority, MovieContract.PATH_MOVIE, MOVIES);
         matcher.addURI(authority, MovieContract.PATH_MOVIE_WITH_ID, MOVIE_WITH_ID);
         matcher.addURI(authority, MovieContract.PATH_MOVIE_WITH_ID_TRAILERS, TRAILERS);
+        matcher.addURI(authority, MovieContract.PATH_MOVIE_WITH_ID_REVIEWS, REVIEWS);
 
         return matcher;
     }
@@ -84,6 +87,26 @@ public class MovieProvider extends ContentProvider {
                 }
                 return trailerInserted;
 
+            case REVIEWS:
+                db.beginTransaction();
+                int reviewInserted = 0;
+                try {
+                    for(ContentValues value: values) {
+                        long _id = db.insert(MovieContract.ReviewEntry.TABLE_NAME, null, value);
+                        if (_id != -1) {
+                            reviewInserted++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+
+                if (reviewInserted > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+                return reviewInserted;
+
             default:
                 return super.bulkInsert(uri, values);
         }
@@ -121,6 +144,17 @@ public class MovieProvider extends ContentProvider {
             case TRAILERS:
                 cursor = db.query(
                         MovieContract.TrailerEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder);
+                break;
+
+            case REVIEWS:
+                cursor = db.query(
+                        MovieContract.ReviewEntry.TABLE_NAME,
                         projection,
                         selection,
                         selectionArgs,
