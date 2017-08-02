@@ -23,7 +23,7 @@ import java.util.List;
 
 import static com.example.administrator.popularmovies.model.MovieReview.*;
 
-public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.CustomViewHolder> {
     private static final String POSTER_URL = "http://image.tmdb.org/t/p/w342/";
     private final Context mContext;
     private Cursor mMovieCursor;
@@ -55,91 +55,22 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         mItemClickListener = itemClickListener;
     }
 
+    public interface ItemClickListener {
+        void onItemClick(int position);
+    }
 
     @Override
     public int getItemViewType(int position) {
-        if (mTrailerCursor != null && mTrailerCursor.getCount() != 0) {
-            return VIEW_TRAILER;
-        }
-        else if (mReviewCursor != null && mReviewCursor.getCount() != 0) {
-            return VIEW_REVIEW;
-        }
-        else if (mMovieCursor != null && mMovieCursor.getCount() != 0) {
+        if (mMovieCursor != null && mMovieCursor.moveToPosition(position)) {
             return VIEW_DETAIL;
         }
-        return -1;
-    }
-
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        RecyclerView.ViewHolder viewHolder;
-        switch (viewType) {
-            case VIEW_TRAILER:
-                View viewTrailer = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_trailers_row, parent, false);
-                viewHolder = new TrailerHolder(viewTrailer);
-                break;
-            case VIEW_REVIEW:
-                View viewReview = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_reviews_row, parent, false);
-                viewHolder = new ReviewHolder(viewReview);
-                break;
-            default:
-                View viewDetail = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_detail_row, parent, false);
-                viewHolder = new DetailHolder(viewDetail);
-                break;
+        else if (mTrailerCursor != null && mTrailerCursor.moveToPosition(position)) {
+            return VIEW_TRAILER;
         }
-        return viewHolder;
-    }
-
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        switch (holder.getItemViewType()) {
-            case VIEW_TRAILER:
-                TrailerHolder trailerHolder = (TrailerHolder) holder;
-                configureTrailerHolder(trailerHolder, position);
-                break;
-            case VIEW_REVIEW:
-                ReviewHolder reviewHolder = (ReviewHolder) holder;
-                configureReviewViewHolder(reviewHolder, position);
-                break;
-            default:
-                DetailHolder detailHolder = (DetailHolder) holder;
-                configureDetailViewHolder(detailHolder, position);
-                break;
+        else if(mReviewCursor != null && mReviewCursor.moveToPosition(position)) {
+            return VIEW_REVIEW;
         }
-    }
-
-    private void configureDetailViewHolder(DetailHolder detailHolder, int position) {
-        if (mMovieCursor.moveToFirst()) {
-            detailHolder.tv_movie_title.setText(mMovieCursor.getString(INDEX_MOVIE_TITLE));
-            detailHolder.tv_movie_date.setText(mMovieCursor.getString(INDEX_MOVIE_RELEASE_DATE).substring(0, 4));
-            detailHolder.tv_movie_runtime.setText(mContext.getString(R.string.runtime, mMovieCursor.getInt(INDEX_MOVIE_RUNTIME)));
-            detailHolder.tv_movie_vote.setText(mContext.getString(R.string.vote_average, mMovieCursor.getFloat(INDEX_MOVIE_USER_RATING)));
-            detailHolder.tv_movie_synopsis.setText(mMovieCursor.getString(INDEX_MOVIE_SYNOPSIS));
-            Picasso.with(mContext)
-                    .load(POSTER_URL + mMovieCursor.getString(INDEX_MOVIE_POSTER))
-                    .error(R.drawable.no_image)
-                    .into(detailHolder.iv_movie_poster);
-
-            if (mMovieCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
-                detailHolder.tv_mark_favorite.setText(mContext.getString(R.string.favorited));
-                detailHolder.tv_mark_favorite.setBackgroundColor(Color.RED);
-                detailHolder.tv_mark_favorite.setTextColor(Color.WHITE);
-            } else if (mMovieCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0){
-                detailHolder.tv_mark_favorite.setText(mContext.getString(R.string.mark_favorite));
-                detailHolder.tv_mark_favorite.setBackgroundColor(Color.GREEN);
-                detailHolder.tv_mark_favorite.setTextColor(Color.BLACK);
-            }
-        }
-    }
-
-    private void configureTrailerHolder(TrailerHolder trailerHolder, int position) {
-        if (mTrailerCursor.moveToFirst()) {
-            trailerHolder.tv_trailerCount.setText("Trailer " + (position + 1));
-            trailerHolder.tv_trailerName.setText(mTrailerCursor.getString(INDEX_TRAILER_NAME));
-        }
-    }
-
-    private void configureReviewViewHolder(ReviewHolder reviewHolder, int position) {
+        return 100;
     }
 
     @Override
@@ -157,67 +88,70 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return (movieCount + trailerCount + reviewCount);
     }
 
-    private class TrailerHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        final TextView tv_trailerCount;
-        final TextView tv_trailerName;
-        final ImageButton mImageButton;
+    @Override
+    public CustomViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        switch (viewType) {
+            case 100:
+                View viewDetail = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_detail_row, parent, false);
+                return new CustomViewHolder(viewDetail);
 
-        TrailerHolder(View itemView) {
-            super(itemView);
-            tv_trailerCount = (TextView) itemView.findViewById(R.id.tv_trailer_count);
-            tv_trailerName = (TextView) itemView.findViewById(R.id.tv_trailer_name);
-            mImageButton = (ImageButton) itemView.findViewById(R.id.imgbtn_trailer);
+            case 200:
+                View viewTrailer = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_trailers_row, parent, false);
+                return new CustomViewHolder(viewTrailer);
 
-            mImageButton.setOnClickListener(this);
+            case 300:
+                View viewReview = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_reviews_row, parent, false);
+                return new CustomViewHolder(viewReview);
+
         }
+        return null;
+    }
 
-        @Override
-        public void onClick(View v) {
-            int position = getAdapterPosition();
-            mItemClickListener.onItemClick(position);
+    @Override
+    public void onBindViewHolder(CustomViewHolder holder, int position) {
+        switch (holder.getItemViewType()) {
+            case VIEW_DETAIL:
+                configureDetailViewHolder(holder, position);
+            case VIEW_TRAILER:
+                configureDetailViewHolder(holder, position);
+            case VIEW_REVIEW:
+                configureDetailViewHolder(holder, position);
+
         }
     }
 
-    private class ReviewHolder extends RecyclerView.ViewHolder {
+    private void configureDetailViewHolder(CustomViewHolder customViewHolder, int position) {
+        if (mMovieCursor.moveToPosition(position)) {
+            customViewHolder.tv_movie_title.setText(mMovieCursor.getString(INDEX_MOVIE_TITLE));
+            customViewHolder.tv_movie_date.setText(mMovieCursor.getString(INDEX_MOVIE_RELEASE_DATE).substring(0, 4));
+            customViewHolder.tv_movie_runtime.setText(mContext.getString(R.string.runtime, mMovieCursor.getInt(INDEX_MOVIE_RUNTIME)));
+            customViewHolder.tv_movie_vote.setText(mContext.getString(R.string.vote_average, mMovieCursor.getFloat(INDEX_MOVIE_USER_RATING)));
+            customViewHolder.tv_movie_synopsis.setText(mMovieCursor.getString(INDEX_MOVIE_SYNOPSIS));
+            Picasso.with(mContext)
+                    .load(POSTER_URL + mMovieCursor.getString(INDEX_MOVIE_POSTER))
+                    .error(R.drawable.no_image)
+                    .into(customViewHolder.iv_movie_poster);
 
-        ReviewHolder(View itemView) {
-            super(itemView);
-
-        }
-    }
-
-    private class DetailHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        final TextView tv_movie_title;
-        final ImageView iv_movie_poster;
-        final TextView tv_movie_date;
-        final TextView tv_movie_runtime;
-        final TextView tv_movie_vote;
-        final TextView tv_mark_favorite;
-        final TextView tv_movie_synopsis;
-
-        DetailHolder(View itemView) {
-            super(itemView);
-            tv_movie_title = (TextView) itemView.findViewById(R.id.tv_movie_title);
-            iv_movie_poster = (ImageView) itemView.findViewById(R.id.iv_movie_poster);
-            tv_movie_date = (TextView) itemView.findViewById(R.id.tv_movie_date);
-            tv_movie_runtime = (TextView) itemView.findViewById(R.id.tv_movie_runtime);
-            tv_movie_vote = (TextView) itemView.findViewById(R.id.tv_movie_vote);
-            tv_movie_synopsis = (TextView) itemView.findViewById(R.id.tv_movie_synopsis);
-            tv_mark_favorite = (TextView) itemView.findViewById(R.id.mark_favorite);
-
-            tv_mark_favorite.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (mMovieCursor.moveToFirst()) {
-                markFavorite(mMovieCursor);
+            if (mMovieCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
+                customViewHolder.tv_mark_favorite.setText(mContext.getString(R.string.favorited));
+                customViewHolder.tv_mark_favorite.setBackgroundColor(Color.RED);
+                customViewHolder.tv_mark_favorite.setTextColor(Color.WHITE);
+            } else if (mMovieCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0){
+                customViewHolder.tv_mark_favorite.setText(mContext.getString(R.string.mark_favorite));
+                customViewHolder.tv_mark_favorite.setBackgroundColor(Color.GREEN);
+                customViewHolder.tv_mark_favorite.setTextColor(Color.BLACK);
             }
         }
     }
 
-    public interface ItemClickListener {
-        void onItemClick(int position);
+    private void configureTrailerHolder(CustomViewHolder trailerHolder, int position) {
+        if (mTrailerCursor.moveToFirst()) {
+            trailerHolder.tv_trailerCount.setText("Trailer " + (position + 1));
+            trailerHolder.tv_trailerName.setText(mTrailerCursor.getString(INDEX_TRAILER_NAME));
+        }
+    }
+
+    private void configureReviewViewHolder(CustomViewHolder reviewHolder, int position) {
     }
 
     public void swapMovieCursor(Cursor newCursor) {
@@ -235,31 +169,129 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         notifyDataSetChanged();
     }
 
-    private void markFavorite(Cursor cursor) {
-    if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
-        String movie_id = String.valueOf(mMovieCursor.getInt(INDEX_MOVIE_ID));
-        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-        uri = uri.buildUpon().appendPath(movie_id).build();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 1);
-        mContext.getContentResolver().update(
-                uri,
-                contentValues,
-                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
-                new String[]{movie_id}
-        );
-    } else if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
-        String movie_id = String.valueOf(cursor.getInt(INDEX_MOVIE_ID));
-        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-        uri = uri.buildUpon().appendPath(movie_id).build();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
-        mContext.getContentResolver().update(
-                uri,
-                contentValues,
-                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
-                new String[]{movie_id}
-        );
+    public class CustomViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+        final TextView tv_movie_title;
+        final ImageView iv_movie_poster;
+        final TextView tv_movie_date;
+        final TextView tv_movie_runtime;
+        final TextView tv_movie_vote;
+        final TextView tv_mark_favorite;
+        final TextView tv_movie_synopsis;
+
+        final TextView tv_trailerCount;
+        final TextView tv_trailerName;
+        final ImageButton mImageButton;
+
+        public CustomViewHolder(View itemView) {
+            super(itemView);
+            tv_movie_title = (TextView) itemView.findViewById(R.id.tv_movie_title);
+            iv_movie_poster = (ImageView) itemView.findViewById(R.id.iv_movie_poster);
+            tv_movie_date = (TextView) itemView.findViewById(R.id.tv_movie_date);
+            tv_movie_runtime = (TextView) itemView.findViewById(R.id.tv_movie_runtime);
+            tv_movie_vote = (TextView) itemView.findViewById(R.id.tv_movie_vote);
+            tv_movie_synopsis = (TextView) itemView.findViewById(R.id.tv_movie_synopsis);
+            tv_mark_favorite = (TextView) itemView.findViewById(R.id.mark_favorite);
+
+            tv_trailerCount = (TextView) itemView.findViewById(R.id.tv_trailer_count);
+            tv_trailerName = (TextView) itemView.findViewById(R.id.tv_trailer_name);
+            mImageButton = (ImageButton) itemView.findViewById(R.id.imgbtn_trailer);
+
+//            tv_mark_favorite.setOnClickListener(this);
+//            mImageButton.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (mMovieCursor.moveToFirst()) {
+                markFavorite(mMovieCursor);
+            }
+        }
+//
+//    private class TrailerHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+//        final TextView tv_trailerCount;
+//        final TextView tv_trailerName;
+//        final ImageButton mImageButton;
+//
+//        TrailerHolder(View itemView) {
+//            super(itemView);
+//            tv_trailerCount = (TextView) itemView.findViewById(R.id.tv_trailer_count);
+//            tv_trailerName = (TextView) itemView.findViewById(R.id.tv_trailer_name);
+//            mImageButton = (ImageButton) itemView.findViewById(R.id.imgbtn_trailer);
+//
+//            mImageButton.setOnClickListener(this);
+//        }
+//
+//        @Override
+//        public void onClick(View v) {
+//            int position = getAdapterPosition();
+//            mItemClickListener.onItemClick(position);
+//        }
+//    }
+//
+//    private class ReviewHolder extends RecyclerView.ViewHolder {
+//
+//        ReviewHolder(View itemView) {
+//            super(itemView);
+//
+//        }
+//    }
+
+//    private class DetailHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+//        final TextView tv_movie_title;
+//        final ImageView iv_movie_poster;
+//        final TextView tv_movie_date;
+//        final TextView tv_movie_runtime;
+//        final TextView tv_movie_vote;
+//        final TextView tv_mark_favorite;
+//        final TextView tv_movie_synopsis;
+//
+//        DetailHolder(View itemView) {
+//            super(itemView);
+//            tv_movie_title = (TextView) itemView.findViewById(R.id.tv_movie_title);
+//            iv_movie_poster = (ImageView) itemView.findViewById(R.id.iv_movie_poster);
+//            tv_movie_date = (TextView) itemView.findViewById(R.id.tv_movie_date);
+//            tv_movie_runtime = (TextView) itemView.findViewById(R.id.tv_movie_runtime);
+//            tv_movie_vote = (TextView) itemView.findViewById(R.id.tv_movie_vote);
+//            tv_movie_synopsis = (TextView) itemView.findViewById(R.id.tv_movie_synopsis);
+//            tv_mark_favorite = (TextView) itemView.findViewById(R.id.mark_favorite);
+//
+//            tv_mark_favorite.setOnClickListener(this);
+//        }
+//
+//        @Override
+//        public void onClick(View v) {
+//            if (mMovieCursor.moveToFirst()) {
+//                markFavorite(mMovieCursor);
+//            }
+//        }
+//    }
+
+        private void markFavorite(Cursor cursor) {
+            if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
+                String movie_id = String.valueOf(mMovieCursor.getInt(INDEX_MOVIE_ID));
+                Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+                uri = uri.buildUpon().appendPath(movie_id).build();
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 1);
+                mContext.getContentResolver().update(
+                        uri,
+                        contentValues,
+                        MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                        new String[]{movie_id}
+                );
+            } else if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
+                String movie_id = String.valueOf(cursor.getInt(INDEX_MOVIE_ID));
+                Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+                uri = uri.buildUpon().appendPath(movie_id).build();
+                ContentValues contentValues = new ContentValues();
+                contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
+                mContext.getContentResolver().update(
+                        uri,
+                        contentValues,
+                        MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                        new String[]{movie_id}
+                );
+            }
+        }
     }
-}
 }

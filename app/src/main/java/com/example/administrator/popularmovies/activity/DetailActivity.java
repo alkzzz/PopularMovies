@@ -34,6 +34,9 @@ public class DetailActivity extends AppCompatActivity implements
     RecyclerView mRvMovieDetail;
     private int movie_id;
     private MovieDetailAdapter mMovieDetailAdapter;
+    private Cursor mMovieCursor;
+    private Cursor mTrailerCursor;
+    private Cursor mReviewCursor;
 
     private static final int ID_MOVIE_DETAIL_LOADER = 9;
     private static final int ID_MOVIE_TRAILER_LOADER = 19;
@@ -115,15 +118,14 @@ public class DetailActivity extends AppCompatActivity implements
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         switch (loader.getId()) {
             case ID_MOVIE_DETAIL_LOADER:
-                mMovieDetailAdapter.swapMovieCursor(data);
-                break;
+                if (data.getCount() != 0) {
+                    showMovie();
+                    mMovieDetailAdapter.swapMovieCursor(data);
+                }
             case ID_MOVIE_TRAILER_LOADER:
                 mMovieDetailAdapter.swapTrailerCursor(data);
-                break;
         }
-        if (data.getCount() != 0) {
-            showMovie();
-        }
+
     }
 
     @Override
