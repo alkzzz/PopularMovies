@@ -31,9 +31,9 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
     private Cursor mReviewCursor;
     private final ItemClickListener mItemClickListener;
 
-    private static final int VIEW_DETAIL = 100;
-    private static final int VIEW_TRAILER = 200;
-    private static final int VIEW_REVIEW = 300;
+    private static final int VIEW_DETAIL = 0;
+    private static final int VIEW_TRAILER = 1;
+    private static final int VIEW_REVIEW = 2;
 
     private static final int INDEX_MOVIE_ID = 1;
     private static final int INDEX_MOVIE_TITLE = 2;
@@ -70,7 +70,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
         else if(mReviewCursor != null && mReviewCursor.moveToPosition(position)) {
             return VIEW_REVIEW;
         }
-        return 100;
+        return 0;
     }
 
     @Override
@@ -78,28 +78,27 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
         if (mMovieCursor == null) return 0;
         int trailerCount = 0;
         int reviewCount = 0;
-        int movieCount = mMovieCursor.getCount();
         if (mTrailerCursor != null && mTrailerCursor.getCount() > 0) {
             trailerCount = mTrailerCursor.getCount();
         }
         if (mReviewCursor != null && mReviewCursor.getCount() > 0) {
             reviewCount = mReviewCursor.getCount();
         }
-        return (movieCount + trailerCount + reviewCount);
+        return (trailerCount + reviewCount);
     }
 
     @Override
     public CustomViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
-            case 100:
+            case VIEW_DETAIL:
                 View viewDetail = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_detail_row, parent, false);
                 return new CustomViewHolder(viewDetail);
 
-            case 200:
+            case VIEW_TRAILER:
                 View viewTrailer = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_trailers_row, parent, false);
                 return new CustomViewHolder(viewTrailer);
 
-            case 300:
+            case VIEW_REVIEW:
                 View viewReview = LayoutInflater.from(parent.getContext()).inflate(R.layout.movie_reviews_row, parent, false);
                 return new CustomViewHolder(viewReview);
 
@@ -206,65 +205,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
                 markFavorite(mMovieCursor);
             }
         }
-//
-//    private class TrailerHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-//        final TextView tv_trailerCount;
-//        final TextView tv_trailerName;
-//        final ImageButton mImageButton;
-//
-//        TrailerHolder(View itemView) {
-//            super(itemView);
-//            tv_trailerCount = (TextView) itemView.findViewById(R.id.tv_trailer_count);
-//            tv_trailerName = (TextView) itemView.findViewById(R.id.tv_trailer_name);
-//            mImageButton = (ImageButton) itemView.findViewById(R.id.imgbtn_trailer);
-//
-//            mImageButton.setOnClickListener(this);
-//        }
-//
-//        @Override
-//        public void onClick(View v) {
-//            int position = getAdapterPosition();
-//            mItemClickListener.onItemClick(position);
-//        }
-//    }
-//
-//    private class ReviewHolder extends RecyclerView.ViewHolder {
-//
-//        ReviewHolder(View itemView) {
-//            super(itemView);
-//
-//        }
-//    }
-
-//    private class DetailHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-//        final TextView tv_movie_title;
-//        final ImageView iv_movie_poster;
-//        final TextView tv_movie_date;
-//        final TextView tv_movie_runtime;
-//        final TextView tv_movie_vote;
-//        final TextView tv_mark_favorite;
-//        final TextView tv_movie_synopsis;
-//
-//        DetailHolder(View itemView) {
-//            super(itemView);
-//            tv_movie_title = (TextView) itemView.findViewById(R.id.tv_movie_title);
-//            iv_movie_poster = (ImageView) itemView.findViewById(R.id.iv_movie_poster);
-//            tv_movie_date = (TextView) itemView.findViewById(R.id.tv_movie_date);
-//            tv_movie_runtime = (TextView) itemView.findViewById(R.id.tv_movie_runtime);
-//            tv_movie_vote = (TextView) itemView.findViewById(R.id.tv_movie_vote);
-//            tv_movie_synopsis = (TextView) itemView.findViewById(R.id.tv_movie_synopsis);
-//            tv_mark_favorite = (TextView) itemView.findViewById(R.id.mark_favorite);
-//
-//            tv_mark_favorite.setOnClickListener(this);
-//        }
-//
-//        @Override
-//        public void onClick(View v) {
-//            if (mMovieCursor.moveToFirst()) {
-//                markFavorite(mMovieCursor);
-//            }
-//        }
-//    }
 
         private void markFavorite(Cursor cursor) {
             if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
