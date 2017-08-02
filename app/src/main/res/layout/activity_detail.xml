@@ -18,7 +18,15 @@
         android:layout_height="wrap_content">
     </android.support.v7.widget.RecyclerView>
 
-    <!--<android.support.v4.widget.NestedScrollView-->
+    <!--<TextView-->
+        <!--android:id="@+id/tv_no_trailer"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@id/rv_movie_detail"-->
+        <!--android:text="test"-->
+        <!--android:layout_marginTop="8dp"/>-->
+
+<!--<android.support.v4.widget.NestedScrollView-->
         <!--android:id="@+id/scrollView"-->
         <!--android:layout_height="wrap_content"-->
         <!--android:layout_width="match_parent"-->

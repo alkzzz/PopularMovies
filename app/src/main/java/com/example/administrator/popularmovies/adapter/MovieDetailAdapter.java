@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.example.administrator.popularmovies.R;
 import com.example.administrator.popularmovies.data.MovieContract;
+import com.example.administrator.popularmovies.model.Movie;
 import com.example.administrator.popularmovies.model.MovieReview;
 import com.example.administrator.popularmovies.model.MovieTrailer;
 import com.squareup.picasso.Picasso;
@@ -61,13 +62,13 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
 
     @Override
     public int getItemViewType(int position) {
-        if (mMovieCursor != null && mMovieCursor.moveToPosition(position)) {
+        if (mMovieCursor.moveToPosition(position)) {
             return VIEW_DETAIL;
         }
-        else if (mTrailerCursor != null && mTrailerCursor.moveToPosition(position)) {
+        else if (mTrailerCursor.moveToPosition(position)) {
             return VIEW_TRAILER;
         }
-        else if(mReviewCursor != null && mReviewCursor.moveToPosition(position)) {
+        else if(mReviewCursor.moveToPosition(position)) {
             return VIEW_REVIEW;
         }
         return 0;
@@ -142,6 +143,37 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
                 customViewHolder.tv_mark_favorite.setBackgroundColor(Color.GREEN);
                 customViewHolder.tv_mark_favorite.setTextColor(Color.BLACK);
             }
+            customViewHolder.tv_mark_favorite.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mMovieCursor.moveToFirst();
+                    if (mMovieCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
+                        String movie_id = String.valueOf(mMovieCursor.getInt(INDEX_MOVIE_ID));
+                        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+                        uri = uri.buildUpon().appendPath(movie_id).build();
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 1);
+                        mContext.getContentResolver().update(
+                                uri,
+                                contentValues,
+                                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                                new String[]{movie_id}
+                        );
+                    } else if (mMovieCursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
+                        String movie_id = String.valueOf(mMovieCursor.getInt(INDEX_MOVIE_ID));
+                        Uri uri = MovieContract.MovieEntry.CONTENT_URI;
+                        uri = uri.buildUpon().appendPath(movie_id).build();
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
+                        mContext.getContentResolver().update(
+                                uri,
+                                contentValues,
+                                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                                new String[]{movie_id}
+                        );
+                    }
+                }
+            });
         }
     }
 
@@ -170,7 +202,7 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
         notifyDataSetChanged();
     }
 
-    public class CustomViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class CustomViewHolder extends RecyclerView.ViewHolder {
         final TextView tv_movie_title;
         final ImageView iv_movie_poster;
         final TextView tv_movie_date;
@@ -199,41 +231,6 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
 
 //            tv_mark_favorite.setOnClickListener(this);
 //            mImageButton.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (mMovieCursor.moveToFirst()) {
-                markFavorite(mMovieCursor);
-            }
-        }
-
-        private void markFavorite(Cursor cursor) {
-            if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 0) {
-                String movie_id = String.valueOf(mMovieCursor.getInt(INDEX_MOVIE_ID));
-                Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-                uri = uri.buildUpon().appendPath(movie_id).build();
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 1);
-                mContext.getContentResolver().update(
-                        uri,
-                        contentValues,
-                        MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
-                        new String[]{movie_id}
-                );
-            } else if (cursor.getInt(INDEX_MOVIE_IS_FAVORITE) == 1) {
-                String movie_id = String.valueOf(cursor.getInt(INDEX_MOVIE_ID));
-                Uri uri = MovieContract.MovieEntry.CONTENT_URI;
-                uri = uri.buildUpon().appendPath(movie_id).build();
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(MovieContract.MovieEntry.COLUMN_IS_FAVORITE, 0);
-                mContext.getContentResolver().update(
-                        uri,
-                        contentValues,
-                        MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
-                        new String[]{movie_id}
-                );
-            }
         }
     }
 }

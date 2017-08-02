@@ -34,9 +34,6 @@ public class DetailActivity extends AppCompatActivity implements
     RecyclerView mRvMovieDetail;
     private int movie_id;
     private MovieDetailAdapter mMovieDetailAdapter;
-    private Cursor mMovieCursor;
-    private Cursor mTrailerCursor;
-    private Cursor mReviewCursor;
 
     private static final int ID_MOVIE_DETAIL_LOADER = 9;
     private static final int ID_MOVIE_TRAILER_LOADER = 19;
@@ -105,8 +102,8 @@ public class DetailActivity extends AppCompatActivity implements
                         this,
                         trailerUri,
                         null,
-                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ? AND "+
-                                MovieContract.TrailerEntry.COLUMN_TYPE + " = ?",
+                        MovieContract.TrailerEntry.COLUMN_MOVIE_ID + " = ?"
+                               + "AND "+ MovieContract.TrailerEntry.COLUMN_TYPE + " = ?",
                         new String[]{String.valueOf(movie_id), "Trailer"},
                         null
                 );
