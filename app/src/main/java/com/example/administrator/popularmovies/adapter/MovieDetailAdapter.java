@@ -68,20 +68,18 @@ public class MovieDetailAdapter extends RecyclerView.Adapter<MovieDetailAdapter.
         else if (mTrailerCursor.moveToPosition(position)) {
             return VIEW_TRAILER;
         }
-        else if(mReviewCursor.moveToPosition(position)) {
+        else {
             return VIEW_REVIEW;
         }
-        return 0;
     }
 
     @Override
-public int getItemCount() {
-    if (mMovieCursor == null) return 0;
-    int movieCount = mMovieCursor.getCount();
-    int trailerCount = mTrailerCursor.getCount();
-    int reviewCount = mReviewCursor.getCount();
-    return (movieCount + trailerCount + reviewCount);
-}
+    public int getItemCount() {
+        if (mMovieCursor == null) return 0;
+        int trailerCount = mTrailerCursor.getCount();
+        int reviewCount = mReviewCursor.getCount();
+        return trailerCount + reviewCount;
+    }
 
     @Override
     public CustomViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
