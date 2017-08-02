@@ -20,9 +20,13 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.example.administrator.popularmovies.R;
+import com.example.administrator.popularmovies.model.MovieReview;
+import com.example.administrator.popularmovies.model.MovieTrailer;
 import com.example.administrator.popularmovies.sync.MovieSync;
 import com.example.administrator.popularmovies.adapter.MoviePosterAdapter;
 import com.example.administrator.popularmovies.data.MovieContract;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
         SharedPreferences.OnSharedPreferenceChangeListener,

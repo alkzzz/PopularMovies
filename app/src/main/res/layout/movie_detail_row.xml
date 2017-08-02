@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:padding="8dp">
+
+    <TextView
+        android:id="@+id/tv_movie_title"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:gravity="center"
+        android:textSize="30sp"
+        android:background="@color/colorBackgroundDark"
+        android:textColor="@color/colorText"/>
+
+    <ImageView
+        android:id="@+id/iv_movie_poster"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_movie_title"
+        android:scaleType="fitXY"
+        android:layout_marginTop="8dp"
+        android:contentDescription="@string/movie_poster_desc"/>
+
+    <TextView
+        android:id="@+id/tv_movie_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_movie_title"
+        android:layout_toEndOf="@id/iv_movie_poster"
+        android:layout_toRightOf="@id/iv_movie_poster"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:textSize="24sp"/>
+
+    <TextView
+        android:id="@+id/tv_movie_runtime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_movie_date"
+        android:layout_toEndOf="@id/iv_movie_poster"
+        android:layout_toRightOf="@id/iv_movie_poster"
+        android:textSize="20sp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp" />
+
+    <TextView
+        android:id="@+id/tv_movie_vote"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_movie_runtime"
+        android:layout_toEndOf="@id/iv_movie_poster"
+        android:layout_toRightOf="@id/iv_movie_poster"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp" />
+
+    <TextView
+        android:id="@+id/mark_favorite"
+        android:layout_width="120dp"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="@string/mark_favorite"
+        android:textAlignment="center"
+        android:background="@color/colorGreen"
+        android:textColor="@color/colorBlack"
+        android:layout_below="@id/tv_movie_vote"
+        android:layout_toEndOf="@id/iv_movie_poster"
+        android:layout_toRightOf="@id/iv_movie_poster"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"/>
+
+    <TextView
+        android:id="@+id/tv_movie_synopsis"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/iv_movie_poster"
+        android:layout_marginTop="8dp"/>
+
+    <View
+        android:id="@+id/synopsisdivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_marginTop="8dp"
+        android:layout_below="@id/tv_movie_synopsis"/>
+
+    <TextView
+        android:id="@+id/tv_trailer_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/trailers"
+        android:textSize="21sp"
+        android:textStyle="bold"
+        android:layout_marginTop="4dp"
+        android:layout_below="@id/synopsisdivider"/>
+
+</RelativeLayout>
